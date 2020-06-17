@@ -1,3 +1,1 @@
-ls "$PSScriptRoot\*.ps1" | %{
-    Invoke-ps2exe "$($_.Fullname)" "$($_.Fullname -replace '.ps1','.exe')" -verbose -x86 -noConsole -noOutput
-}
+Invoke-ps2exe .\xToDoc.ps1 -verbose -x86 -noConsole -noOutput
