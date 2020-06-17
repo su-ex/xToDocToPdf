@@ -7,6 +7,8 @@ $description | Format-Table
 
 showTree($description)
 
+$description | Format-Table
+
 $path = "X:\Projekte\2020\PR-2000158_IMB Stromversorgungssysteme GmbH_Test Bedienhandbuch\TestBedienhandbuch"
 $target = "$path\Ziel.docx"
 

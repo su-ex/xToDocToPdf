@@ -1,21 +1,11 @@
 Add-Type -AssemblyName System.Windows.Forms
 
 function showTree($description) {
-    function GetCheckedNode {
-        param($nodes)
-
-        foreach ($n in $Nodes) {
-            if ($n.checked) {
-                Write-Host $n.Text
-            }
-            if ($n.nodes.count -gt 0)
-            {
-                GetCheckedNode $n.nodes
-            }
-        }   
-    }
     $ButtonOK_Click = {
-        GetCheckedNode $treeView.Nodes
+        foreach ($d in $description) {
+            $d.enabled = $d.asset.checked
+            $d.asset = $Null
+        }
     }
 
     $window = New-Object System.Windows.Forms.Form
