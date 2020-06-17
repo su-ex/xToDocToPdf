@@ -15,10 +15,10 @@ class JobHandling {
 
     [void] run() {
         $total = $this.jobs.Count
-        $i = 0
+        $i = 1
         while ($this.jobs.Count -gt 0) {
             $current = $this.jobs.Dequeue()
-            Write-Progress -Activity $this.activityName -Status "Aufgabe $($i+1) von $total" -PercentComplete (($i++/$total)*100) -CurrentOperation $current.operation
+            Write-Progress -Activity $this.activityName -Status "Aufgabe $($i) von $total" -PercentComplete (($i++/$total)*100) -CurrentOperation $current.operation
             & $current.job
         }
     }

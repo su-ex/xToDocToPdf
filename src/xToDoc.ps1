@@ -8,7 +8,7 @@ Import-Module "$PSScriptRoot\modules\JobHandling.psm1" -Force
 $workingDirectory
 
 $description = getDescription("X:\Vorlagen\Bedienhandbuch\Vorlage.desc")
-$description | Format-Table
+#$description | Format-Table
 
 $continue = showTree($description)
 if ($continue -ne $true) {
@@ -16,7 +16,7 @@ if ($continue -ne $true) {
     exit -1
 }
 
-$description | Format-Table
+#$description | Format-Table
 
 $path = "X:\Projekte\2020\PR-2000158_IMB Stromversorgungssysteme GmbH_Test Bedienhandbuch\TestBedienhandbuch"
 $target = "$path\Ziel.docx"
@@ -38,4 +38,5 @@ $jobs.run()
 
 destroyWA
 
+Write-Host "Erfolgreich! :-)"
 exit 0
