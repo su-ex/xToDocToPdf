@@ -23,3 +23,7 @@ class JobHandling {
         }
     }
 }
+
+Function JobHandling([String] $activityName) {
+    return [JobHandling]::new($activityName)
+}

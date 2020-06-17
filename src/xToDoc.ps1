@@ -1,7 +1,7 @@
-using module .\modules\WordAbstraction.psm1
-using module .\modules\DescriptionFile.psm1
-using module .\modules\TreeDialogue.psm1
-using module .\modules\JobHandling.psm1
+Import-Module "$PSScriptRoot\modules\WordAbstraction.psm1" -Force
+Import-Module "$PSScriptRoot\modules\DescriptionFile.psm1" -Force
+Import-Module "$PSScriptRoot\modules\TreeDialogue.psm1" -Force
+Import-Module "$PSScriptRoot\modules\JobHandling.psm1" -Force
 
 $description = getDescription("X:\Vorlagen\Bedienhandbuch\Vorlage.desc")
 $description | Format-Table
@@ -13,7 +13,7 @@ $description | Format-Table
 $path = "X:\Projekte\2020\PR-2000158_IMB Stromversorgungssysteme GmbH_Test Bedienhandbuch\TestBedienhandbuch"
 $target = "$path\Ziel.docx"
 
-$jobs = [JobHandling]::new("Generiere Word-Dokument ...")
+$jobs = JobHandling("Generiere Word-Dokument ...")
 
 $jobs.add("Tue irgendwas", { $Script:WA = initWA })
 $jobs.add("Tue irgendwas", { Copy-Item "$path\FormatvorlagenUndAnfang.docx" -Destination "$target" -Force })
