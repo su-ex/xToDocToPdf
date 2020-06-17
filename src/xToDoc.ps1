@@ -1,6 +1,7 @@
-Import-Module "$PSScriptRoot\modules\WordAbstraction.psm1" -Force
-Import-Module "$PSScriptRoot\modules\DescriptionFile.psm1" -Force
-Import-Module "$PSScriptRoot\modules\TreeDialogue.psm1" -Force
+using module .\modules\WordAbstraction.psm1
+using module .\modules\DescriptionFile.psm1
+using module .\modules\TreeDialogue.psm1
+using module .\modules\JobHandling.psm1
 
 $description = getDescription("X:\Vorlagen\Bedienhandbuch\Vorlage.desc")
 $description | Format-Table
@@ -12,22 +13,17 @@ $description | Format-Table
 $path = "X:\Projekte\2020\PR-2000158_IMB Stromversorgungssysteme GmbH_Test Bedienhandbuch\TestBedienhandbuch"
 $target = "$path\Ziel.docx"
 
-$functions = [System.Collections.Queue]@()
+$jobs = [JobHandling]::new("Generiere Word-Dokument ...")
 
-$functions.Enqueue({ $Script:WA = initWA })
-$functions.Enqueue({ Copy-Item "$path\FormatvorlagenUndAnfang.docx" -Destination "$target" -Force })
-$functions.Enqueue({ $WA.Run("concatenate", [ref]$target, [ref]"$path\WichtigeInformation.doc") })
-$functions.Enqueue({ $WA.Run("concatenate", [ref]$target, [ref]"$path\blablabla.doc") })
-$functions.Enqueue({ $WA.Run("concatenate", [ref]$target, [ref]"$path\blablabla.doc") })
-$functions.Enqueue({ $WA.Run("concatenate", [ref]$target, [ref]"$path\Rest.doc") })
-$functions.Enqueue({ $WA.Run("updateHeadings", [ref]$target) })
-$functions.Enqueue({ $WA.Run("updateFields", [ref]$target) })
-$functions.Enqueue({ $WA.Run("saveAndClose", [ref]$target) })
-$functions.Enqueue({ destroyWA })
+$jobs.add("Tue irgendwas", { $Script:WA = initWA })
+$jobs.add("Tue irgendwas", { Copy-Item "$path\FormatvorlagenUndAnfang.docx" -Destination "$target" -Force })
+$jobs.add("Tue irgendwas", { $WA.Run("concatenate", [ref]$target, [ref]"$path\WichtigeInformation.doc") })
+$jobs.add("Tue irgendwas", { $WA.Run("concatenate", [ref]$target, [ref]"$path\blablabla.doc") })
+$jobs.add("Tue irgendwas", { $WA.Run("concatenate", [ref]$target, [ref]"$path\blablabla.doc") })
+$jobs.add("Tue irgendwas", { $WA.Run("concatenate", [ref]$target, [ref]"$path\Rest.doc") })
+$jobs.add("Tue irgendwas", { $WA.Run("updateHeadings", [ref]$target) })
+$jobs.add("Tue irgendwas", { $WA.Run("updateFields", [ref]$target) })
+$jobs.add("Tue irgendwas", { $WA.Run("saveAndClose", [ref]$target) })
+$jobs.add("Tue irgendwas", { destroyWA })
 
-$total = $functions.Count
-$i = 0
-while ($functions.Count -gt 0) {
-    Write-Progress -Activity "Generiere Word-Dokument ..." -Status "$($i+1) / $total" -PercentComplete (($i++/$total)*100) -CurrentOperation "Tue irgendwas"
-    & $functions.Dequeue()
-}
+$jobs.run()
