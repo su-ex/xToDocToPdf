@@ -1,12 +1,20 @@
+Param ($workingDirectory, $envname)
+
 Import-Module "$PSScriptRoot\modules\WordAbstraction.psm1" -Force
 Import-Module "$PSScriptRoot\modules\DescriptionFile.psm1" -Force
 Import-Module "$PSScriptRoot\modules\TreeDialogue.psm1" -Force
 Import-Module "$PSScriptRoot\modules\JobHandling.psm1" -Force
 
+$workingDirectory
+
 $description = getDescription("X:\Vorlagen\Bedienhandbuch\Vorlage.desc")
 $description | Format-Table
 
-showTree($description)
+$continue = showTree($description)
+if ($continue -ne $true) {
+    Write-Error "Abgebrochen"
+    exit -1
+}
 
 $description | Format-Table
 
@@ -21,7 +29,7 @@ $jobs.add("Tue irgendwas", { Copy-Item "$path\FormatvorlagenUndAnfang.docx" -Des
 $jobs.add("Tue irgendwas", { $WA.Run("concatenate", [ref]$target, [ref]"$path\WichtigeInformation.doc") })
 $jobs.add("Tue irgendwas", { $WA.Run("concatenate", [ref]$target, [ref]"$path\blablabla.doc") })
 $jobs.add("Tue irgendwas", { $WA.Run("concatenate", [ref]$target, [ref]"$path\blablabla.doc") })
-$jobs.add("Tue irgendwas", { $WA.Run("concatenate", [ref]$target, [ref]"$path\Rest.doci") })
+$jobs.add("Tue irgendwas", { $WA.Run("concatenate", [ref]$target, [ref]"$path\Rest.doc") })
 $jobs.add("Tue irgendwas", { $WA.Run("updateHeadings", [ref]$target) })
 $jobs.add("Tue irgendwas", { $WA.Run("updateFields", [ref]$target) })
 $jobs.add("Tue irgendwas", { $WA.Run("saveAndClose", [ref]$target) })
@@ -29,3 +37,5 @@ $jobs.add("Tue irgendwas", { $WA.Run("saveAndClose", [ref]$target) })
 $jobs.run()
 
 destroyWA
+
+exit 0

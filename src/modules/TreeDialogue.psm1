@@ -73,4 +73,6 @@ function showTree($description) {
 
     $window.Controls.Add($treeView)
     $window.ShowDialog()
+
+    return ("$($window.DialogResult)" -eq "OK")
 }
