@@ -11,7 +11,16 @@ $descriptionPath = "X:\Vorlagen\Bedienhandbuch\Vorlage.desc"
 $lang = "de"
 $target = "X:\Projekte\2020\PR-2000158_IMB Stromversorgungssysteme GmbH_Test Bedienhandbuch\TestBedienhandbuch\Ziel.docx"
 
-if (Test-Path $target) { Remove-Item $target }
+try {
+    if (Test-Path $target) { 
+        Remove-Item $target
+    } else {
+        throw "Zielpfad existiert nicht!"
+    }
+} catch {
+    Write-Error $_.Exception.Message
+    exit -1
+}
 
 try {
     $Script:description = getDescription($descriptionPath)
@@ -30,7 +39,9 @@ if ($continue -ne $true) {
 #$description | Format-Table
 
 $description = ($description | Where {$_.enabled})
-$totalOperations = $description.Count + 4
+#$description | Format-Table
+$totalOperations = 4
+foreach ($d in $description) { $totalOperations++ }
 
 $path = Split-Path $descriptionPath
 $path = Join-Path -Path $path -ChildPath $lang
@@ -39,7 +50,7 @@ $WA = WordAbstraction
 
 $progress = ProgressHelper("Generiere Word-Dokument ...")
 $progress.setTotalOperations($totalOperations)
- 
+
 try {
     # ToDo: handle non doc
     foreach ($d in $description) {

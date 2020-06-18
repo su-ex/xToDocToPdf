@@ -21,7 +21,7 @@ class WordAbstraction {
     }
 
     [boolean] concatenate($path1, $path2) {
-        Write-Host "path1: $path1, path2: $path2"
+        #Write-Host "path1: $path1, path2: $path2"
         return $this.Word.Run("xToDoc.concatenate", [ref]"$path1", [ref]"$path2")
     }
 
