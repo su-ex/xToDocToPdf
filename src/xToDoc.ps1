@@ -1,13 +1,19 @@
-Param ($workingDirectory, $envname)
+#Param ($workingDirectory, $envname)
 
 Import-Module "$PSScriptRoot\modules\WordAbstraction.psm1" -Force
 Import-Module "$PSScriptRoot\modules\DescriptionFile.psm1" -Force
 Import-Module "$PSScriptRoot\modules\TreeDialogue.psm1" -Force
 Import-Module "$PSScriptRoot\modules\JobHandling.psm1" -Force
 
-$workingDirectory
+#$workingDirectory
 
-$description = getDescription("X:\Vorlagen\Bedienhandbuch\Vorlage.desc")
+$descriptionPath = "X:\Vorlagen\Bedienhandbuch\Vorlage.desc"
+$lang = "de"
+$target = "X:\Projekte\2020\PR-2000158_IMB Stromversorgungssysteme GmbH_Test Bedienhandbuch\TestBedienhandbuch\Ziel.docx"
+
+if (Test-Path $target) { Remove-Item $target }
+
+$description = getDescription($descriptionPath)
 #$description | Format-Table
 
 $continue = showTree($description)
@@ -18,25 +24,25 @@ if ($continue -ne $true) {
 
 #$description | Format-Table
 
-$path = "X:\Projekte\2020\PR-2000158_IMB Stromversorgungssysteme GmbH_Test Bedienhandbuch\TestBedienhandbuch"
-$target = "$path\Ziel.docx"
+$path = Split-Path $descriptionPath
+$path = Join-Path -Path $path -ChildPath $lang
 
-$WA = initWA
+$WA = WordAbstraction
 
 $jobs = JobHandling("Generiere Word-Dokument ...")
 
-$jobs.add("Tue irgendwas", { Copy-Item "$path\FormatvorlagenUndAnfang.docx" -Destination "$target" -Force })
-$jobs.add("Tue irgendwas", { $WA.Run("concatenate", [ref]$target, [ref]"$path\WichtigeInformation.doc") })
-$jobs.add("Tue irgendwas", { $WA.Run("concatenate", [ref]$target, [ref]"$path\blablabla.doc") })
-$jobs.add("Tue irgendwas", { $WA.Run("concatenate", [ref]$target, [ref]"$path\blablabla.doc") })
-$jobs.add("Tue irgendwas", { $WA.Run("concatenate", [ref]$target, [ref]"$path\Rest.doc") })
-$jobs.add("Tue irgendwas", { $WA.Run("updateHeadings", [ref]$target) })
-$jobs.add("Tue irgendwas", { $WA.Run("updateFields", [ref]$target) })
-$jobs.add("Tue irgendwas", { $WA.Run("saveAndClose", [ref]$target) })
+foreach ($d in $description) {
+    if($d.enabled -eq $False) { continue }
+    "$target, $(Join-Path -Path $path -ChildPath $d.path)"
+    Invoke-Command { $WA.concatenate($target, (Join-Path -Path $path -ChildPath $d.path)) }
+}
+
+$jobs.add("Aktualisiere Überschriften", { $WA.updateHeadings($target) })
+$jobs.add("Aktualisiere Felder", { $WA.updateFields($target) })
+$jobs.add("Speichern", { $WA.saveAndClose($target) })
 
 $jobs.run()
 
-destroyWA
+$WA.destroy()
 
-Write-Host "Erfolgreich! :-)"
 exit 0

@@ -15,12 +15,22 @@ class JobHandling {
 
     [void] run() {
         $total = $this.jobs.Count
-        $i = 1
+        $i = 0
         while ($this.jobs.Count -gt 0) {
             $current = $this.jobs.Dequeue()
-            Write-Progress -Activity $this.activityName -Status "Aufgabe $($i) von $total" -PercentComplete (($i++/$total)*100) -CurrentOperation $current.operation
-            & $current.job
+            Write-Progress -Activity $this.activityName -Status "Aufgabe $($i+1) von $total" -PercentComplete (($i++/$total)*100) -CurrentOperation $current.operation
+            try {
+                Write-Host $current.job
+                $ret = (Invoke-Command -ScriptBlock $current.job -NoNewScope)
+                Write-Host $ret
+                if ($ret -ne $True) { throw }
+            } catch {
+                Write-Error "Aufgabe `"$($current.operation)`" konnte nicht ausgeführt werden."
+                return
+            }
         }
+        Write-Progress -Activity $this.activityName -Status "Abgeschlossen" -PercentComplete 100
+        Write-Host "Erfolgreich! :-)"
     }
 }
 
