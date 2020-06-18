@@ -13,9 +13,7 @@ $target = "X:\Projekte\2020\PR-2000158_IMB Stromversorgungssysteme GmbH_Test Bed
 
 try {
     if (Test-Path $target) { 
-        Remove-Item $target
-    } else {
-        throw "Zielpfad existiert nicht!"
+        Remove-Item $target -ErrorAction Stop
     }
 } catch {
     Write-Error $_.Exception.Message
@@ -26,6 +24,7 @@ try {
     $Script:description = getDescription($descriptionPath)
 } catch {
     Write-Error $_.Exception.Message
+    exit -1
 }
 #$description | Format-Table
 
