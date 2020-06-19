@@ -1,1 +1,1 @@
-Invoke-ps2exe .\xToDoc.ps1 -verbose -x86 -noConsole
+Invoke-ps2exe .\xToDoc.ps1 -verbose -noConsole
