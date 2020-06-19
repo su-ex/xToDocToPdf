@@ -1,19 +1,18 @@
 ﻿Param (
-    #[parameter(Mandatory=$true)]
     [String] ${working-directory} = "X:\Projekte\2020\PR-2000158_IMB Stromversorgungssysteme GmbH_Test Bedienhandbuch\TestBedienhandbuch",
     
     [String] ${target-file} = ".\Ziel.docx",
     [String] ${selected-description-file} = ".\Auswahl.desc",
 
-    #[parameter(Mandatory=$true)]
     [String] ${template-description-file} = "X:\Vorlagen\Bedienhandbuch\Vorlage.desc",
 
     [String] $lang = "de",
-    [String] ${variable-replacement-excel-range},
-    [Switch] ${use-variable-flags}
+    
+    [Switch] ${get-variables-from-excel},
+    [String] ${excel-workbook-file},
+    [String] ${excel-worksheet-name},
+    [String] ${excel-table-name}
 )
-
-${working-directory}
 
 if ($MyInvocation.MyCommand.CommandType -eq "ExternalScript") {
     $Script:ScriptPath = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
@@ -26,6 +25,7 @@ Import-Module "$ScriptPath\modules\WordAbstraction.psm1" -Force
 Import-Module "$ScriptPath\modules\DescriptionFile.psm1" -Force
 Import-Module "$ScriptPath\modules\TreeDialogue.psm1" -Force
 Import-Module "$ScriptPath\modules\ProgressHelper.psm1" -Force
+Import-Module "$ScriptPath\modules\ExcelHelper.psm1" -Force
 
 # make sure working directory exists and make path always absolute
 try {
@@ -80,9 +80,26 @@ if (Test-Path $selectedDescriptionFile) {
 }
 
 # replacement variables stuff
-$replaceVariables = $PSBoundParameters.ContainsKey("variable-replacement-excel-range")
-$useVariableFlags = [boolean]${use-variable-flags}
-$variableReplacementExcelRange = ${variable-replacement-excel-range}
+$replaceVariables = [boolean]${get-variables-from-excel}
+if ($replaceVariables) {
+    # base relative paths upon working directory
+    $excelWorkbookFile = ${excel-workbook-file}
+    if (-not [System.IO.Path]::IsPathRooted($excelWorkbookFile)) {
+        $excelWorkbookFile = [System.IO.Path]::GetFullPath((Join-Path -Path $workingDirectory -ChildPath $excelWorkbookFile))
+    }
+    
+    if (-not (Test-Path $excelWorkbookFile)) {
+        Write-Error "Die Excel-Arbeitsmappe $excelWorkbookFile existiert nicht!"
+        exit -1
+    }
+        
+    try {
+        $Script:replacementVariables = Get-ExcelTable $excelWorkbookFile ${excel-table-name} ${excel-worksheet-name}
+    } catch {
+        Write-Error "Beim Auslesen der Tabelle mit den Variablen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmt der Tabellenname???"
+        exit -1
+    }
+}
 
 try {
     $Script:description = getDescription($descriptionFile)
