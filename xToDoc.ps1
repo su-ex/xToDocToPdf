@@ -14,6 +14,8 @@
     [String] ${excel-table-name}
 )
 
+Function IIf($If, $Right, $Wrong) {If ($If) {$Right} Else {$Wrong}}
+
 if ($MyInvocation.MyCommand.CommandType -eq "ExternalScript") {
     $Script:ScriptPath = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
 } else {
@@ -79,6 +81,10 @@ if (Test-Path $selectedDescriptionFile) {
     exit -1
 }
 
+# set template path
+$templatePath = Split-Path $templateDescriptionFile
+$templatePath = Join-Path -Path $templatePath -ChildPath $lang
+
 # replacement variables stuff
 $replaceVariables = [boolean]${get-variables-from-excel}
 if ($replaceVariables) {
@@ -99,6 +105,7 @@ if ($replaceVariables) {
         Write-Error "Beim Auslesen der Tabelle mit den Variablen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmt der Tabellenname???"
         exit -1
     }
+    #$replacementVariables | Format-Table
 }
 
 try {
@@ -117,15 +124,15 @@ if ($continue -ne $true) {
 
 # ToDo: save description
 #$description | Format-Table
+$description | % {
+    "" + (IIf $_.enabled "" ";") + $("`t" * $_.indent) + "$($_.desc): $($_.path)"
+} | Out-File -FilePath $selectedDescriptionFile
 
 $description = ($description | Where {$_.enabled})
 #$description | Format-Table
 $totalOperations = 3
 if ($replaceVariables) { $totalOperations++ }
 foreach ($d in $description) { $totalOperations++ }
-
-$templatePath = Split-Path $descriptionFile
-$templatePath = Join-Path -Path $templatePath -ChildPath $lang
 
 $WA = WordAbstraction
 
