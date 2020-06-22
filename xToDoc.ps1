@@ -105,7 +105,6 @@ if ($replaceVariables) {
         Write-Error "Beim Auslesen der Tabelle mit den Variablen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmt der Tabellenname???"
         exit -1
     }
-    #$replacementVariables | Format-Table
 }
 
 try {
@@ -124,11 +123,11 @@ if ($continue -ne $true) {
 
 # ToDo: save description
 #$description | Format-Table
-$description | % {
+$description | ForEach-Object {
     "" + (IIf $_.enabled "" ";") + $("`t" * $_.indent) + "$($_.desc): $($_.path)"
 } | Out-File -FilePath $selectedDescriptionFile
 
-$description = ($description | Where {$_.enabled})
+$description = ($description | Where-Object {$_.enabled})
 #$description | Format-Table
 $totalOperations = 3
 if ($replaceVariables) { $totalOperations++ }
@@ -148,7 +147,24 @@ try {
 
     if ($replaceVariables) { 
         $progress.update("Variablen ersetzen")
-        # ToDo: Variablen ersetzen
+        
+        foreach ($variable in $replacementVariables) {
+            $name = $variable.Variable
+
+            # split lines and later join them with a vertical tab (Word's new line in same paragraph: Shift+Enter)
+            $replacementLines = $variable.Wert -split "`r?`n"
+
+            # get flags from Excel to apply special behaviour on some variables:
+            #   "t" to append a horizontal tab before each line in a variable
+            $flags = [char[]]$variable.Flags
+            foreach ($flag in $flags) {
+                if ($flag -eq 't') {
+                    $replacementLines = $replacementLines | ForEach-Object { "`t" + $_ }
+                }
+            }
+            
+            if (-not $WA.replaceVariable($targetFile, $name, $replacementLines -join "`v")) { $progress.error() }
+        }
     }
 
     $progress.update("Aktualisiere Überschriften")

@@ -25,6 +25,22 @@ class WordAbstraction {
         return $this.Word.Run("xToDoc.concatenate", [ref]"$path1", [ref]"$path2")
     }
 
+    [boolean] replace($path, $text, $replacement, $replaceAll, $startEnd) {
+        return $this.Word.Run("xToDoc.replace", [ref]"$path", [ref]"$text", [ref]"$replacement", [ref]$replaceAll, [ref]$startEnd)
+    }
+
+    [boolean] replaceVariable($path, $name, $value, $replaceAll, $startEnd) {
+        return $this.Word.Run("xToDoc.replace", [ref]"$path", [ref]"{{`$$name}}", [ref]"$value", [ref]$replaceAll, [ref]$startEnd)
+    }
+
+    [boolean] replaceVariable($path, $name, $value) {
+        return $this.replaceVariable("$path", $name, $value, $true, $false)
+    }
+
+    [boolean] replaceLastVariable($path, $name, $value) {
+        return $this.replaceVariable("$path", $name, $value, $false, $true)
+    }
+
     [boolean] updateHeadings($path) {
         return $this.Word.Run("xToDoc.updateHeadings", [ref]"$path")
     }
