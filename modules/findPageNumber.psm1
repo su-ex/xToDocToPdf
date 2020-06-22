@@ -1,5 +1,5 @@
 $pdfMagic = "################################PDF################################"
-$pdfPathPrefix = "Datei: "
+$pdfFilePrefix = "Datei: "
 $pdfPagePrefix = "Seite "
 
 $docPath = "X:\Skripte\xToDoc\assets\PDF.docx"
@@ -15,7 +15,7 @@ $wdFindStop = 0
 $wdReplaceNone = 0
 $wdActiveEndPageNumber = 3
 
-$FindText = "$pdfMagic^l$pdfPathPrefix*^l$pdfPagePrefix*^l$pdfMagic"
+$FindText = "$pdfMagic^l$pdfFilePrefix*^l$pdfPagePrefix*^l$pdfMagic"
 $MatchCase = $False
 $MatchWholeWord = $False
 $MatchWildCards = $True
@@ -30,7 +30,7 @@ $Replace = $wdReplaceNone
 while ($objSelection.Find.Execute($FindText,$MatchCase,$MatchWholeWord,
 $MatchWildCards,$MatchSoundsLike,$MatchAllWordForms,$Forward,
 $Wrap,$Format,$ReplaceWith,$Replace)) {
-    $objSelection.Text -match "$pdfMagic`v$pdfPathPrefix(.*)`v$pdfPagePrefix(.*)`v$pdfMagic" | Out-Null
+    $objSelection.Text -match "$pdfMagic`v$pdfFilePrefix(.*)`v$pdfPagePrefix(.*)`v$pdfMagic" | Out-Null
     $pdfReplacements.Add([PSCustomObject]@{
         path = $matches[1]
         docPageNumber = $objSelection.Information($wdActiveEndPageNumber)

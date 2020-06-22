@@ -28,6 +28,7 @@ Import-Module "$ScriptPath\modules\DescriptionFile.psm1" -Force
 Import-Module "$ScriptPath\modules\TreeDialogue.psm1" -Force
 Import-Module "$ScriptPath\modules\ProgressHelper.psm1" -Force
 Import-Module "$ScriptPath\modules\ExcelHelper.psm1" -Force
+Import-Module "$ScriptPath\modules\PdfHelper.psm1" -Force
 
 # make sure working directory exists and make path always absolute
 try {
@@ -139,10 +140,24 @@ $progress = ProgressHelper("Generiere Word-Dokument ...")
 $progress.setTotalOperations($totalOperations)
 
 try {
-    # ToDo: handle non doc
     foreach ($d in $description) {
         $progress.update("Hänge $($d.desc) an")
-        if (-not $WA.concatenate($targetFile, (Join-Path -Path $templatePath -ChildPath $d.path)) ) { $progress.error() }
+
+        # ToDo: handle flags
+        $file = (Join-Path -Path $templatePath -ChildPath $d.path)
+
+        # check if file exists while retrieving file type
+        $extension = (Get-Item $file -ErrorAction Stop).Extension
+
+        if (@(".doc", ".dot", ".wbk", ".docx", ".docm", ".dotx", ".dotm", ".docb").Contains($extension.ToLower())) {
+            if (-not $WA.concatenate($targetFile, $file)) { $progress.error() }
+        } elseif ($extension -ieq ".pdf") {
+            $nPages = getPdfPageNumber($file)
+            Write-Host "pages: $nPages"
+            for ($i = 1; $i -le $nPages; $i++) {
+                if (-not $WA.concatenatePdfPage($targetFile, $file, $i)) { $progress.error() }
+            }
+        }
     }
 
     if ($replaceVariables) { 

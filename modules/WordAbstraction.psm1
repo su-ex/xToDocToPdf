@@ -1,5 +1,6 @@
 class WordAbstraction {
     [String] $docmPath = "$PSScriptRoot\Makros.docm"
+    [String] $templatePdfPage = "$PSScriptRoot\..\assets\PDF.docx"
 
     $Word = $Null
     $docm = $Null
@@ -23,6 +24,13 @@ class WordAbstraction {
     [boolean] concatenate($path1, $path2) {
         #Write-Host "path1: $path1, path2: $path2"
         return $this.Word.Run("xToDoc.concatenate", [ref]"$path1", [ref]"$path2")
+    }
+
+    [boolean] concatenatePdfPage($path, $pdfFile, $pdfPageNumber) {
+        if (-not $this.concatenate($path, $this.templatePdfPage)) { return $false }
+        if (-not $this.replaceLastVariable($path, "pdfFile", $pdfFile)) { return $false }
+        if (-not $this.replaceLastVariable($path, "pdfPageNumber", $pdfPageNumber)) { return $false }
+        return $true
     }
 
     [boolean] replace($path, $text, $replacement, $replaceAll, $startEnd) {
