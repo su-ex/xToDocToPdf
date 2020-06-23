@@ -103,7 +103,7 @@ if ($replaceVariables) {
     try {
         $Script:replacementVariables = Get-ExcelTable $excelWorkbookFile ${excel-table-name} ${excel-worksheet-name}
     } catch {
-        Write-Error "Beim Auslesen der Tabelle mit den Variablen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmt der Tabellenname???"
+        Write-Error "Beim Auslesen der Tabelle mit den Variablen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmt z. B. der Tabellenname???"
         exit -1
     }
 }
@@ -144,18 +144,18 @@ try {
         $progress.update("Hänge $($d.desc) an")
 
         # ToDo: handle flags
-        $file = (Join-Path -Path $templatePath -ChildPath $d.path)
+        $path = (Join-Path -Path $templatePath -ChildPath $d.path)
 
         # check if file exists while retrieving file type
-        $extension = (Get-Item $file -ErrorAction Stop).Extension
+        $extension = (Get-Item $path -ErrorAction Stop).Extension
 
         if (@(".doc", ".dot", ".wbk", ".docx", ".docm", ".dotx", ".dotm", ".docb").Contains($extension.ToLower())) {
-            if (-not $WA.concatenate($targetFile, $file)) { $progress.error() }
+            if (-not $WA.concatenate($targetFile, $path)) { $progress.error() }
         } elseif ($extension -ieq ".pdf") {
-            $nPages = getPdfPageNumber($file)
-            Write-Host "pages: $nPages"
+            $nPages = getPdfPageNumber($path)
+            #Write-Host "pages: $nPages"
             for ($i = 1; $i -le $nPages; $i++) {
-                if (-not $WA.concatenatePdfPage($targetFile, $file, $i)) { $progress.error() }
+                if (-not $WA.concatenatePdfPage($targetFile, $path, $i, (IIf ($i -eq 1) "1" "None"), $d.desc)) { $progress.error() }
             }
         }
     }
@@ -193,7 +193,7 @@ try {
 
     $progress.success()
 } catch {
-    Write-Error $_.Exception.Message
+    Write-Error "Zusammensetzen leider fehlgeschlagen: $($_.Exception.Message)`n`nIm kommenden Word Dialog NICHT `"Abbrechen`" auswählen, wenn man es noch einmal versuchen will, da man sonst Word per Task Manager beenden muss!!!"
 }
 
 $WA.destroy()

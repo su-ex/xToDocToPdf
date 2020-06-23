@@ -26,10 +26,12 @@ class WordAbstraction {
         return $this.Word.Run("xToDoc.concatenate", [ref]"$path1", [ref]"$path2")
     }
 
-    [boolean] concatenatePdfPage($path, $pdfFile, $pdfPageNumber) {
+    [boolean] concatenatePdfPage($path, $pdfFile, $pdfPageNumber, $pdfHeadingTier, $pdfHeadingText) {
         if (-not $this.concatenate($path, $this.templatePdfPage)) { return $false }
         if (-not $this.replaceLastVariable($path, "pdfFile", $pdfFile)) { return $false }
         if (-not $this.replaceLastVariable($path, "pdfPageNumber", $pdfPageNumber)) { return $false }
+        if (-not $this.replaceLastVariable($path, "pdfHeadingTier", $pdfHeadingTier)) { return $false }
+        if (-not $this.replaceLastVariable($path, "pdfHeadingText", $pdfHeadingText)) { return $false }
         return $true
     }
 
