@@ -188,7 +188,7 @@ try {
     $progress.update("Aktualisiere Felder")
     if (-not $WA.updateFields($targetFile)) { $progress.error() }
     
-    $progress.update("Speichern")
+    $progress.update("Speichern und schließen")
     if (-not $WA.saveAndClose($targetFile)) { $progress.error() }
 
     $progress.success()
