@@ -146,6 +146,9 @@ try {
         # ToDo: handle flags
         $path = (Join-Path -Path $templatePath -ChildPath $d.path)
 
+        $pdfHeadingTier = "1"
+        $pdfHeadingText = $d.desc
+
         # check if file exists while retrieving file type
         $extension = (Get-Item $path -ErrorAction Stop).Extension
 
@@ -155,7 +158,8 @@ try {
             $nPages = getPdfPageNumber($path)
             #Write-Host "pages: $nPages"
             for ($i = 1; $i -le $nPages; $i++) {
-                if (-not $WA.concatenatePdfPage($targetFile, $path, $i, (IIf ($i -eq 1) "1" "None"), $d.desc)) { $progress.error() }
+                if (-not $WA.concatenatePdfPage($targetFile, $path, $i, $pdfHeadingTier, $pdfHeadingText)) { $progress.error() }
+                $pdfHeadingTier = "None"
             }
         }
     }
