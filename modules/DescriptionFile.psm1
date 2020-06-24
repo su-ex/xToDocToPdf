@@ -1,4 +1,7 @@
 [Regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+(?<path>[^\\/:\*\?"<>\|]+)$'
+$insertionPlaceholder = '${disabled}${indent}${desc}: ${path}'
+
+Import-Module "$PSScriptRoot\HelperFunctions.psm1" -Force
 
 Function getDescription($path) {
     $pieces = [System.Collections.ArrayList]@()
@@ -33,6 +36,11 @@ Function getDescription($path) {
 
 function setDescription($path, $description) {
     $description | ForEach-Object {
-        "" + (If ($_.enabled) {""} Else {";"}) + $("`t" * $_.indent) + "$($_.desc): $($_.path)"
+        replaceTokens $insertionPlaceholder @{
+            disabled = IIf $_.enabled "" ";"
+            indent = "`t" * $_.indent
+            desc = $_.desc
+            path = $_.path
+        }
     } | Out-File -FilePath $path
 }
