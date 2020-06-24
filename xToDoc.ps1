@@ -13,7 +13,7 @@
     [String] ${excel-worksheet-name},
     [String] ${excel-table-name},
 
-    [String[]] ${custom-base-path}
+    [String[]] ${custom-base-path} = @(".")
 )
 
 if ($MyInvocation.MyCommand.CommandType -eq "ExternalScript") {
@@ -83,10 +83,6 @@ if (Test-Path $selectedDescriptionFile) {
     exit -1
 }
 
-# set template path
-$templatePath = Split-Path $templateDescriptionFile
-$templatePath = Join-Path -Path $templatePath -ChildPath $lang
-
 # replacement variables stuff
 $replaceVariables = [boolean]${get-variables-from-excel}
 if ($replaceVariables) {
@@ -137,6 +133,13 @@ $totalOperations = 3
 if ($replaceVariables) { $totalOperations++ }
 foreach ($d in $description) { $totalOperations++ }
 
+# set template path
+$templatePath = Split-Path $templateDescriptionFile
+
+# custom base paths
+$customBasePaths = ${-custom-base-path}
+Write-Debug "custom base paths: $customBasePaths"
+
 $WA = WordAbstraction
 
 $progress = ProgressHelper("Generiere Word-Dokument ...")
@@ -147,7 +150,9 @@ try {
         $progress.update("Hänge $($d.desc) an")
 
         # ToDo: handle flags
-        $path = (Join-Path -Path $templatePath -ChildPath $d.path)
+
+        $path = Join-Path -Path $templatePath -ChildPath $lang
+        $path = Join-Path -Path $path -ChildPath $d.path
 
         $pdfHeadingTier = "1"
         $pdfHeadingText = $d.desc

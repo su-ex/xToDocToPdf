@@ -1,4 +1,4 @@
-[Regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+((?=.*a(?<alphabetical>r?))?(?=.*c(?<custombasepath>\d+))?(?=.*h(?<headingtier>\d))?.*>)?(?<path>[^\\/:\*\?"<>\|]+)$'
+[Regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):(\s+((?=.*a(?<alphabetical>r?))?(?=.*c(?<custombasepath>\d+))?(?=.*h(?<headingtier>\d))?.*>)?(?<path>[^\\/:\*\?"<>\|]+))?$'
 $insertionPlaceholder = '${disabled}${indent}${desc}: ${path}'
 
 Import-Module "$PSScriptRoot\HelperFunctions.psm1" -Force
@@ -11,7 +11,7 @@ Function getDescription($path) {
         $m = $extractionPattern.match($line)
         $m | Format-List | Out-String | Write-Debug
 
-        if (-not $m) {
+        if (-not $m.Success) {
             throw "Malformed description (pattern not recognized)!"
         }
 
@@ -29,6 +29,9 @@ Function getDescription($path) {
         }
         If ($customBasePath.Success) {
             $flags["customBasePath"] = [int]$customBasePath.Value
+            If ($flags["customBasePath"] -gt 0) {
+                $flags["customBasePath"] -= 1
+            }
         }
         If ($headingTier.Success) {
             $flags["headingTier"]    = $headingTier.Value
