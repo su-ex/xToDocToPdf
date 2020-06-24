@@ -1,4 +1,4 @@
-[Regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+(?<path>[^\\/:\*\?"<>\|]+)$'
+[Regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+((?=.*a(?<alphabetical>r?))?(?=.*c(?<custombasepath>\d+))?(?=.*h(?<headingtier>\d))?.*>)?(?<path>[^\\/:\*\?"<>\|]+)$'
 $insertionPlaceholder = '${disabled}${indent}${desc}: ${path}'
 
 Import-Module "$PSScriptRoot\HelperFunctions.psm1" -Force
@@ -15,18 +15,31 @@ Function getDescription($path) {
             throw "Malformed description (pattern not recognized)!"
         }
 
-        $disabled, $indent, $desc, $path = $m.Groups['disabled', 'indent', 'desc', 'path']
+        $disabled, $indent, $desc, $path = $m.Groups['disabled', 'indent', 'desc', 'path'] # basic capture groups
+        $alphabetical, $customBasePath, $headingTier = $m.Groups['alphabetical', 'custombasepath', 'headingtier'] # flag capture groups
 
         if ($indent.Length - $lastIndent -gt 1) {
             throw "Malformed description (indentation mistake)!"
         }
         $lastIndent = $indent.Length
 
+        $flags = @{}
+        If ($alphabetical.Success) {
+            $flags["alphabetical"]   = $alphabetical.Value -eq 'r'
+        }
+        If ($customBasePath.Success) {
+            $flags["customBasePath"] = [int]$customBasePath.Value
+        }
+        If ($headingTier.Success) {
+            $flags["headingTier"]    = $headingTier.Value
+        }
+
         $pieces.Add([PSCustomObject]@{
             desc = $desc.Value
             path = $path.Value
             enabled = $disabled.Length -eq 0
             indent = $indent.Length
+            flags = $flags
             asset = $Null
         }) | Out-Null
     }
@@ -34,7 +47,7 @@ Function getDescription($path) {
     return $pieces
 }
 
-function setDescription($path, $description) {
+Function setDescription($path, $description) {
     $description | ForEach-Object {
         replaceTokens $insertionPlaceholder @{
             disabled = IIf $_.enabled "" ";"
@@ -44,3 +57,5 @@ function setDescription($path, $description) {
         }
     } | Out-File -FilePath $path
 }
+
+Function getDescribedFolder() {}

@@ -9,3 +9,5 @@ Function replaceTokens([String]$placeholderString, [hashtable]$tokens) {
     }
     return $placeholderString
 }
+
+Function makePathAbsolute([String]$base, [String]$child) {}

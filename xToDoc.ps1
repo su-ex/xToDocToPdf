@@ -11,7 +11,9 @@
     [Switch] ${get-variables-from-excel},
     [String] ${excel-workbook-file},
     [String] ${excel-worksheet-name},
-    [String] ${excel-table-name}
+    [String] ${excel-table-name},
+
+    [String[]] ${custom-base-path}
 )
 
 if ($MyInvocation.MyCommand.CommandType -eq "ExternalScript") {
@@ -27,6 +29,7 @@ Import-Module "$ScriptPath\modules\TreeDialogue.psm1" -Force
 Import-Module "$ScriptPath\modules\ProgressHelper.psm1" -Force
 Import-Module "$ScriptPath\modules\ExcelHelper.psm1" -Force
 Import-Module "$ScriptPath\modules\PdfHelper.psm1" -Force
+Import-Module "$ScriptPath\modules\HelperFunctions.psm1" -Force
 
 # make sure working directory exists and make path always absolute
 try {
