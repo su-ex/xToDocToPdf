@@ -1,31 +1,26 @@
+[regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+(?<path>[^\\/:\*\?"<>\|]+)$'
+
 Function getDescription($path) {
     $pieces = [System.Collections.ArrayList]@()
 
     $lastIndent = 0;
     foreach($line in [System.IO.File]::ReadLines($path)) {
-        $desc, $path = $line -split ": "
+        $m = $extractionPattern.match($line)
+        $m | Format-List | Out-String | Write-Host
+        if (-not $m) { throw "Malformed description (pattern not recognized)!" }
 
-        $disabled = $False
-        if ($desc.SubString(0, 1) -eq ";") {
-            $disabled = $True
-            $desc = $desc.SubString(1, $desc.length-1)
-        }
+        $disabled, $indent, $desc, $path = $m.Groups['disabled', 'indent', 'desc', 'path']
 
-        $indent = 0
-        while ($desc.SubString(0, 1) -eq "`t") {
-            $indent++
-            $desc = $desc.SubString(1, $desc.length-1)
-        }
-
-        if ($indent - $lastIndent -gt 1) {
+        if ($indent.Length - $lastIndent -gt 1) {
             throw "Malformed description (indentation mistake)!"
         }
+        $lastIndent = $indent.Length
 
         $pieces.Add([PSCustomObject]@{
-            desc = $desc
-            path = $path
-            enabled = !$disabled
-            indent = $indent
+            desc = $desc.Value
+            path = $path.Value
+            enabled = $disabled.Length -eq 0
+            indent = $indent.Length
             asset = $Null
         }) | Out-Null
     }
