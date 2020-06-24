@@ -6,8 +6,11 @@ Function getDescription($path) {
     $lastIndent = 0;
     foreach($line in [System.IO.File]::ReadLines($path)) {
         $m = $extractionPattern.match($line)
-        $m | Format-List | Out-String | Write-Host
-        if (-not $m) { throw "Malformed description (pattern not recognized)!" }
+        $m | Format-List | Out-String | Write-Debug
+
+        if (-not $m) {
+            throw "Malformed description (pattern not recognized)!"
+        }
 
         $disabled, $indent, $desc, $path = $m.Groups['disabled', 'indent', 'desc', 'path']
 

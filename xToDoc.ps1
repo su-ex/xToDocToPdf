@@ -114,7 +114,9 @@ try {
     Write-Error $_.Exception.Message
     exit -1
 }
-#$description | Format-Table
+
+Write-Debug "Description before tree selection:"
+$description | Format-Table | Out-String | Write-Debug
 
 $continue = showTree($description)
 if ($continue -ne $true) {
@@ -122,14 +124,14 @@ if ($continue -ne $true) {
     exit -1
 }
 
-# ToDo: save description
-#$description | Format-Table
+Write-Debug "Description after tree selection:"
+$description | Format-Table | Out-String | Write-Debug
+
 $description | ForEach-Object {
     "" + (IIf $_.enabled "" ";") + $("`t" * $_.indent) + "$($_.desc): $($_.path)"
 } | Out-File -FilePath $selectedDescriptionFile
 
 $description = ($description | Where-Object {$_.enabled})
-#$description | Format-Table
 $totalOperations = 3
 if ($replaceVariables) { $totalOperations++ }
 foreach ($d in $description) { $totalOperations++ }
@@ -156,7 +158,7 @@ try {
             if (-not $WA.concatenate($targetFile, $path)) { $progress.error() }
         } elseif ($extension -ieq ".pdf") {
             $nPages = getPdfPageNumber($path)
-            #Write-Host "pages: $nPages"
+            Write-Debug "pdf page number: $nPages"
             for ($i = 1; $i -le $nPages; $i++) {
                 if (-not $WA.concatenatePdfPage($targetFile, $path, $i, $pdfHeadingTier, $pdfHeadingText)) { $progress.error() }
                 $pdfHeadingTier = "None"
