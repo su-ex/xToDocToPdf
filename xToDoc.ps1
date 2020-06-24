@@ -14,8 +14,6 @@
     [String] ${excel-table-name}
 )
 
-Function IIf($If, $Right, $Wrong) {If ($If) {$Right} Else {$Wrong}}
-
 if ($MyInvocation.MyCommand.CommandType -eq "ExternalScript") {
     $Script:ScriptPath = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
 } else {
@@ -108,8 +106,9 @@ if ($replaceVariables) {
     }
 }
 
+# extract description from file
 try {
-    $Script:description = getDescription($descriptionFile)
+    $Script:description = getDescription $descriptionFile
 } catch {
     Write-Error $_.Exception.Message
     exit -1
@@ -118,7 +117,7 @@ try {
 Write-Debug "Description before tree selection:"
 $description | Format-Table | Out-String | Write-Debug
 
-$continue = showTree($description)
+$continue = showTree $description
 if ($continue -ne $true) {
     Write-Error "Abgebrochen"
     exit -1
@@ -127,9 +126,8 @@ if ($continue -ne $true) {
 Write-Debug "Description after tree selection:"
 $description | Format-Table | Out-String | Write-Debug
 
-$description | ForEach-Object {
-    "" + (IIf $_.enabled "" ";") + $("`t" * $_.indent) + "$($_.desc): $($_.path)"
-} | Out-File -FilePath $selectedDescriptionFile
+# write selected elements of description to file
+setDescription $selectedDescriptionFile $description
 
 $description = ($description | Where-Object {$_.enabled})
 $totalOperations = 3

@@ -1,4 +1,4 @@
-[regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+(?<path>[^\\/:\*\?"<>\|]+)$'
+[Regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+(?<path>[^\\/:\*\?"<>\|]+)$'
 
 Function getDescription($path) {
     $pieces = [System.Collections.ArrayList]@()
@@ -29,4 +29,10 @@ Function getDescription($path) {
     }
 
     return $pieces
+}
+
+function setDescription($path, $description) {
+    $description | ForEach-Object {
+        "" + (If ($_.enabled) {""} Else {";"}) + $("`t" * $_.indent) + "$($_.desc): $($_.path)"
+    } | Out-File -FilePath $path
 }
