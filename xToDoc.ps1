@@ -31,6 +31,9 @@ Import-Module "$ScriptPath\modules\ExcelHelper.psm1" -Force
 Import-Module "$ScriptPath\modules\PdfHelper.psm1" -Force
 Import-Module "$ScriptPath\modules\HelperFunctions.psm1" -Force
 
+$wordExtensions = @(".doc", ".dot", ".wbk", ".docx", ".docm", ".dotx", ".dotm", ".docb")
+$pdfExtensions = @(".pdf")
+
 # make sure working directory exists and make path always absolute
 try {
     $Script:workingDirectory = Resolve-Path ${working-directory} -ErrorAction Stop
@@ -40,14 +43,8 @@ try {
 }
 
 # base relative paths upon working directory
-$targetFile = ${target-file}
-if (-not [System.IO.Path]::IsPathRooted($targetFile)) {
-    $targetFile = [System.IO.Path]::GetFullPath((Join-Path -Path $workingDirectory -ChildPath $targetFile))
-}
-$selectedDescriptionFile = ${selected-description-file}
-if (-not [System.IO.Path]::IsPathRooted($selectedDescriptionFile)) {
-    $selectedDescriptionFile = [System.IO.Path]::GetFullPath((Join-Path -Path $workingDirectory -ChildPath $selectedDescriptionFile))
-}
+$targetFile = makePathAbsolute $workingDirectory ${target-file}
+$selectedDescriptionFile = makePathAbsolute $workingDirectory ${selected-description-file}
 
 # ask if existing target document should be deleted or check if its base path exists
 try {
@@ -87,10 +84,7 @@ if (Test-Path $selectedDescriptionFile) {
 $replaceVariables = [boolean]${get-variables-from-excel}
 if ($replaceVariables) {
     # base relative paths upon working directory
-    $excelWorkbookFile = ${excel-workbook-file}
-    if (-not [System.IO.Path]::IsPathRooted($excelWorkbookFile)) {
-        $excelWorkbookFile = [System.IO.Path]::GetFullPath((Join-Path -Path $workingDirectory -ChildPath $excelWorkbookFile))
-    }
+    $excelWorkbookFile = makePathAbsolute $workingDirectory ${excel-workbook-file}
     
     if (-not (Test-Path $excelWorkbookFile)) {
         Write-Error "Die Excel-Arbeitsmappe $excelWorkbookFile existiert nicht!"
@@ -114,7 +108,7 @@ try {
 }
 
 Write-Debug "Description before tree selection:"
-$description | Format-Table | Out-String | Write-Debug
+$description | Select-Object -Property * -ExcludeProperty raw,asset | Format-Table | Out-String | Write-Debug
 
 $continue = showTree $description
 if ($continue -ne $true) {
@@ -123,7 +117,7 @@ if ($continue -ne $true) {
 }
 
 Write-Debug "Description after tree selection:"
-$description | Format-Table | Out-String | Write-Debug
+$description | Select-Object -Property * -ExcludeProperty raw,asset | Format-Table | Out-String | Write-Debug
 
 # write selected elements of description to file
 setDescription $selectedDescriptionFile $description
@@ -133,12 +127,10 @@ $totalOperations = 3
 if ($replaceVariables) { $totalOperations++ }
 foreach ($d in $description) { $totalOperations++ }
 
-# set template path
-$templatePath = Split-Path $templateDescriptionFile
-
 # custom base paths
-$customBasePaths = ${-custom-base-path}
-Write-Debug "custom base paths: $customBasePaths"
+$customBasePaths = ${custom-base-path}
+Write-Debug "custom base paths:"
+$customBasePaths | Format-List | Out-String | Write-Debug
 
 $WA = WordAbstraction
 
@@ -148,13 +140,30 @@ $progress.setTotalOperations($totalOperations)
 try {
     foreach ($d in $description) {
         $progress.update("Hänge $($d.desc) an")
-        Write-Debug "current to concatenate:"
-        $d | Format-List | Out-String | Write-Debug
+        # Write-Debug "current to concatenate:"
+        # $d | Format-List | Out-String | Write-Debug
 
         # ToDo: handle flags
+        
+        # set template path (relative to description file if custom base path flag not set)
+        $path = Split-Path $templateDescriptionFile
+        if ($d.flags.ContainsKey("customBasePath")) {
+            if ($d.flags.customBasePath -lt 0 -or $d.flags.customBasePath -ge $customBasePaths.Count) {
+                throw "Kein $($d.flags.customBasePath + 1). benutzerdefinierter Basispfad als Parameter übergeben!"
+            }
 
-        $path = Join-Path -Path $templatePath -ChildPath $lang
-        $path = Join-Path -Path $path -ChildPath $d.path
+            $path = makePathAbsolute $workingDirectory $customBasePaths[$d.flags.customBasePath]
+        }
+
+        # append language folder
+        $path = Join-Path -Path $path -ChildPath $lang
+
+        # append path from description if it's relative otherwise use it directly
+        $path = makePathAbsolute $path $d.path
+
+        # if (-not (Test-Path $path)) {
+        #     throw "$($d.desc): $path existiert nicht!"
+        # }
 
         $pdfHeadingTier = "1"
         $pdfHeadingText = $d.desc
@@ -162,9 +171,9 @@ try {
         # check if file exists while retrieving file type
         $extension = (Get-Item $path -ErrorAction Stop).Extension
 
-        if (@(".doc", ".dot", ".wbk", ".docx", ".docm", ".dotx", ".dotm", ".docb").Contains($extension.ToLower())) {
+        if ($wordExtensions.Contains($extension.ToLower())) {
             if (-not $WA.concatenate($targetFile, $path)) { $progress.error() }
-        } elseif ($extension -ieq ".pdf") {
+        } elseif ($pdfExtensions.Contains($extension.ToLower())) {
             $nPages = getPdfPageNumber($path)
             Write-Debug "pdf page number: $nPages"
             for ($i = 1; $i -le $nPages; $i++) {

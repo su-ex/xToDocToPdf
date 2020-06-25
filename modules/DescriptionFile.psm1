@@ -1,5 +1,6 @@
-[Regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+(?<rawflags>((?=.*a(?<alphabetical>r?))?(?=.*c(?<custombasepath>\d+))?(?=.*h(?<headingtier>\d*))?.*>)?)(?<path>[^:\*\?"<>\|]*)$'
-$insertionPlaceholder = '${disabled}${indent}${desc}: ${rawflags}${path}'
+[regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+((?<flags>[a-z0-9]*)>)?(?<path>[^:\*\?"<>\|]*)$'
+[regex]$flagsExtractionPattern = '(?=.*a(?<alphabetical>r?))?(?=.*c(?<custombasepath>\d*))?(?=.*h(?<headingtier>[1-9]?))?.*'
+$insertionPlaceholder = '${raw}'
 
 Import-Module "$PSScriptRoot\HelperFunctions.psm1" -Force
 
@@ -11,15 +12,20 @@ Function getDescription($path) {
     foreach($line in [System.IO.File]::ReadAllLines($path)) {
         $m = $extractionPattern.match($line)
         Write-Debug "line: $line"
-        $m | Format-List | Out-String | Write-Debug
+        # $m | Format-List | Out-String | Write-Debug
 
         # pattern not recognized
         if (-not $m.Success) {
             throw "Malformed description (pattern not recognized at line $i):`n$line"
         }
-
-        $disabled, $indent, $desc, $path = $m.Groups['disabled', 'indent', 'desc', 'path'] # basic capture groups
-        $rawFlags, $alphabetical, $customBasePath, $headingTier = $m.Groups['rawflags', 'alphabetical', 'custombasepath', 'headingtier'] # flag capture groups
+        
+        # basic capture groups
+        $disabled, $indent, $desc, $path = $m.Groups['disabled', 'indent', 'desc', 'path']
+        
+        # flag capture groups
+        $f = $flagsExtractionPattern.Match($m.Groups['flags'].Value)
+        # $f | Format-List | Out-String | Write-Debug
+        $alphabetical, $customBasePath, $headingTier = $f.Groups['alphabetical', 'custombasepath', 'headingtier']
 
         # check if indentaion is always ascending with one step at max
         if ($indent.Length - $lastIndent -gt 1) {
@@ -28,14 +34,15 @@ Function getDescription($path) {
         $lastIndent = $indent.Length
 
         #interpret flags
-        $flags = @{"raw" = $rawFlags}
+        $flags = @{}
         If ($alphabetical.Success) {
             $flags["alphabetical"]   = $alphabetical.Value -eq 'r'
         }
         If ($customBasePath.Success) {
-            $flags["customBasePath"] = [int]$customBasePath.Value
-            If ($flags["customBasePath"] -gt 0) {
-                $flags["customBasePath"] -= 1
+            if ($customBasePath.Value -eq "") {
+                $flags["customBasePath"] = 0
+            } else {
+                $flags["customBasePath"] = ([int]$customBasePath.Value) - 1
             }
         }
         If ($headingTier.Success) {
@@ -51,6 +58,7 @@ Function getDescription($path) {
 
         # add each new successfully parsed entry to the list
         $pieces.Add([PSCustomObject]@{
+            raw = $line
             desc = $desc.Value
             path = $path.Value
             enabled = $disabled.Length -eq 0
@@ -68,11 +76,7 @@ Function getDescription($path) {
 Function setDescription($path, $description) {
     $description | ForEach-Object {
         replaceTokens $insertionPlaceholder @{
-            disabled = IIf $_.enabled "" ";"
-            indent = "`t" * $_.indent
-            desc = $_.desc
-            rawflags = $_.flags.raw
-            path = $_.path
+            raw = $_.raw
         }
     } | Out-File -FilePath $path
 }

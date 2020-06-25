@@ -10,4 +10,10 @@ Function replaceTokens([String]$placeholderString, [hashtable]$tokens) {
     return $placeholderString
 }
 
-Function makePathAbsolute([String]$base, [String]$child) {}
+Function makePathAbsolute([String]$base, [String]$child) {
+    if (-not [System.IO.Path]::IsPathRooted($child)) {
+        return [System.IO.Path]::GetFullPath((Join-Path -Path $base -ChildPath $child))
+    } else {
+        return $child
+    }
+}
