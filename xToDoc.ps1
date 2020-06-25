@@ -109,7 +109,7 @@ if ($replaceVariables) {
 try {
     $Script:description = getDescription $descriptionFile
 } catch {
-    Write-Error $_.Exception.Message
+    Write-Error "Die Beschreibungsdatei konnte nicht ausgelesen werden: $($_.Exception.Message)"
     exit -1
 }
 
