@@ -1,6 +1,8 @@
 [regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+((?<flags>[a-z0-9]*)>)?(?<path>[^:\*\?"<>\|]*)$'
-[regex]$flagsExtractionPattern = '(?=.*a(?<alphabetical>r?))?(?=.*c(?<custombasepath>\d*))?(?=.*h(?<headingtier>[1-9]?))?.*'
+[regex]$flagsExtractionPattern = '(?=.*a(?<alphabetical>r?))?(?=.*s(?<skiplang>))?(?=.*c(?<custombasepath>\d*))?(?=.*h(?<headingtier>[1-9]?))?.*'
 $insertionPlaceholder = '${raw}'
+
+[regex]$pdfFilenameInfoExtraction = '__(?<desc>.*)__(##(?<headingtier>[1-9])##)?'
 
 Import-Module "$PSScriptRoot\HelperFunctions.psm1" -Force
 
@@ -25,7 +27,7 @@ Function getDescription($path) {
         # flag capture groups
         $f = $flagsExtractionPattern.Match($m.Groups['flags'].Value)
         # $f | Format-List | Out-String | Write-Debug
-        $alphabetical, $customBasePath, $headingTier = $f.Groups['alphabetical', 'custombasepath', 'headingtier']
+        $alphabetical, $skipLang, $customBasePath, $headingTier = $f.Groups['alphabetical', 'skiplang', 'custombasepath', 'headingtier']
 
         # check if indentaion is always ascending with one step at max
         if ($indent.Length - $lastIndent -gt 1) {
@@ -36,7 +38,10 @@ Function getDescription($path) {
         #interpret flags
         $flags = @{}
         If ($alphabetical.Success) {
-            $flags["alphabetical"]   = $alphabetical.Value -eq 'r'
+            $flags["alphabetical"] = $alphabetical.Value -eq 'r'
+        }
+        If ($skipLang.Success) {
+            $flags["skipLang"] = $Null
         }
         If ($customBasePath.Success) {
             if ($customBasePath.Value -eq "") {
@@ -47,9 +52,9 @@ Function getDescription($path) {
         }
         If ($headingTier.Success) {
             if ($headingTier.Value -eq "") {
-                $flags["headingTier"]    = $indent.Length
+                $flags["headingTier"] = $indent.Length
             } else {
-                $flags["headingTier"]    = $headingTier.Value
+                $flags["headingTier"] = $headingTier.Value
             }
         }
 
@@ -81,4 +86,45 @@ Function setDescription($path, $description) {
     } | Out-File -FilePath $path
 }
 
-Function getDescribedFolder() {}
+Function getDescribedFolder([string]$Path, [switch]$Recurse, [array]$Extensions) {
+    $files = (
+        Get-ChildItem $Path -Recurse -Name |
+        ForEach-Object { makePathAbsolute $Path $_ } |
+        Where-Object { $Extensions.Contains((Get-Item $_).Extension.ToLower()) } |
+        Sort-Object
+    )
+
+    $piecesi = [System.Collections.ArrayList]@()
+    foreach($file in $files) {
+        $nameWithoutExtension = (Get-Item $file).BaseName
+        
+        # flag capture groups
+        $f = $pdfFilenameInfoExtraction.Match($nameWithoutExtension)
+        # $f | Format-List | Out-String | Write-Debug
+        $desc, $headingTier = $f.Groups['desc', 'headingtier']
+
+        $descValue = $nameWithoutExtension
+        If ($desc.Success) {
+            $descValue = $desc.Value
+        }
+
+        #interpret flags
+        $flags = @{}
+        If ($headingTier.Success) {
+            $flags["headingTier"] = $headingTier.Value
+        }
+
+        # add each new successfully parsed entry to the list
+        $piecesi.Add([PSCustomObject]@{
+            raw = $Null
+            desc = $descValue
+            path = $file
+            enabled = $true
+            indent = -1
+            flags = $flags
+            asset = $Null
+        }) | Out-Null
+    }
+
+    return $piecesi
+}

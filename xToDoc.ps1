@@ -122,7 +122,7 @@ $description | Select-Object -Property * -ExcludeProperty raw,asset | Format-Tab
 # write selected elements of description to file
 setDescription $selectedDescriptionFile $description
 
-$description = ($description | Where-Object {$_.enabled})
+$description = ($description | Where-Object {$_.enabled -and $_.path -ne ""})
 $totalOperations = 3
 if ($replaceVariables) { $totalOperations++ }
 foreach ($d in $description) { $totalOperations++ }
@@ -143,8 +143,6 @@ try {
         # Write-Debug "current to concatenate:"
         # $d | Format-List | Out-String | Write-Debug
 
-        # ToDo: handle flags
-        
         # set template path (relative to description file if custom base path flag not set)
         $path = Split-Path $templateDescriptionFile
         if ($d.flags.ContainsKey("customBasePath")) {
@@ -155,36 +153,61 @@ try {
             $path = makePathAbsolute $workingDirectory $customBasePaths[$d.flags.customBasePath]
         }
 
-        # append language folder
-        $path = Join-Path -Path $path -ChildPath $lang
+        # append language folder if not skipped
+        if (-not $d.flags.ContainsKey("skipLang")) {
+            $path = Join-Path -Path $path -ChildPath $lang
+        }
 
         # append path from description if it's relative otherwise use it directly
         $path = makePathAbsolute $path $d.path
 
-        # if (-not (Test-Path $path)) {
-        #     throw "$($d.desc): $path existiert nicht!"
-        # }
+        $pieces = [System.Collections.ArrayList]@()
 
-        $pdfHeadingTier = "1"
-        $pdfHeadingText = $d.desc
+        if ($d.flags.ContainsKey("alphabetical")) {
+            if (-not (Get-Item $path) -is [System.IO.DirectoryInfo]) {
+                throw "$path ist kein Verzeichnis!"
+            }
+            
+            $gottenFiles = (getDescribedFolder -Path $path -Recurse:($d.flags.alphabetical) -Extensions ($wordExtensions + $pdfExtensions))
+            foreach ($s in $gottenFiles) {
+                $pieces.Add($s) | Out-Null
+            }
+        } else {
+            $d.path = $path
+            $pieces.Add($d) | Out-Null
+        }
 
-        # check if file exists while retrieving file type
-        $extension = (Get-Item $path -ErrorAction Stop).Extension
+        $pdfHeadingTier = "None"
+        if ($d.flags.ContainsKey("headingTier")) {
+            $pdfHeadingTier = $d.flags.headingTier
+        }
 
-        if ($wordExtensions.Contains($extension.ToLower())) {
-            if (-not $WA.concatenate($targetFile, $path)) { $progress.error() }
-        } elseif ($pdfExtensions.Contains($extension.ToLower())) {
-            $nPages = getPdfPageNumber($path)
-            Write-Debug "pdf page number: $nPages"
-            for ($i = 1; $i -le $nPages; $i++) {
-                if (-not $WA.concatenatePdfPage($targetFile, $path, $i, $pdfHeadingTier, $pdfHeadingText)) { $progress.error() }
-                $pdfHeadingTier = "None"
+        foreach ($p in $pieces) {
+            if ($p.flags.ContainsKey("headingTier")) {
+                $pdfHeadingTier = $p.flags.headingTier
+            }
+            $pdfHeadingText = ItIf $p.desc $d.desc
+
+            # check if file exists while retrieving file type
+            $extension = (Get-Item $p.path -ErrorAction Stop).Extension
+
+            if ($wordExtensions.Contains($extension.ToLower())) {
+                if (-not $WA.concatenate($targetFile, $p.path)) { $progress.error() }
+            } elseif ($pdfExtensions.Contains($extension.ToLower())) {
+                $nPages = getPdfPageNumber($p.path)
+                Write-Debug "pdf page number: $nPages"
+                for ($i = 1; $i -le $nPages; $i++) {
+                    if (-not $WA.concatenatePdfPage($targetFile, $p.path, $i, $pdfHeadingTier, $pdfHeadingText)) { $progress.error() }
+                    $pdfHeadingTier = "None"
+                }
+            } else {
+                throw "Dateityp nicht unterstützt!"
             }
         }
     }
 
     if ($replaceVariables) { 
-        $progress.update("Variablen ersetzen")
+        # $progress.update("Variablen ersetzen")
         
         foreach ($variable in $replacementVariables) {
             $name = $variable.Variable

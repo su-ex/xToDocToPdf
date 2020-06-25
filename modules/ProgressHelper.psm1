@@ -24,7 +24,7 @@ class ProgressHelper {
     }
 
     [void] error() {
-        throw "Aufgabe `"$($this.currentOperation)`" konnte nicht ausgeführt werden."
+        throw "Aufgabe `"$($this.currentOperation)`" konnte nicht ausgefÃ¼hrt werden."
     }
 
     [void] success() {
