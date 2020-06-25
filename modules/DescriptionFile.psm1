@@ -1,4 +1,4 @@
-[Regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):(\s+((?=.*a(?<alphabetical>r?))?(?=.*c(?<custombasepath>\d+))?(?=.*h(?<headingtier>\d))?.*>)?(?<path>[^\\/:\*\?"<>\|]+))?$'
+[Regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+((?=.*a(?<alphabetical>r?))?(?=.*c(?<custombasepath>\d+))?(?=.*h(?<headingtier>\d))?.*>)?(?<path>[^\\/:\*\?"<>\|]*)$'
 $insertionPlaceholder = '${disabled}${indent}${desc}: ${path}'
 
 Import-Module "$PSScriptRoot\HelperFunctions.psm1" -Force
@@ -7,7 +7,7 @@ Function getDescription($path) {
     $pieces = [System.Collections.ArrayList]@()
 
     $lastIndent = 0;
-    foreach($line in [System.IO.File]::ReadLines($path)) {
+    foreach($line in [System.IO.File]::ReadAllLines($path)) {
         $m = $extractionPattern.match($line)
         $m | Format-List | Out-String | Write-Debug
 
