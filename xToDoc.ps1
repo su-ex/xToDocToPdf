@@ -148,6 +148,8 @@ $progress.setTotalOperations($totalOperations)
 try {
     foreach ($d in $description) {
         $progress.update("Hänge $($d.desc) an")
+        Write-Debug "current to concatenate:"
+        $d | Format-List | Out-String | Write-Debug
 
         # ToDo: handle flags
 
@@ -202,12 +204,14 @@ try {
     
     $progress.update("Speichern und schließen")
     if (-not $WA.saveAndClose($targetFile)) { $progress.error() }
-
-    $progress.success()
 } catch {
-    Write-Error "Zusammensetzen leider fehlgeschlagen: $($_.Exception.Message)`n`nIm kommenden Word Dialog NICHT `"Abbrechen`" auswählen, wenn man es noch einmal versuchen will, da man sonst Word per Task Manager beenden muss!!!"
+    try { $WA.saveAndClose($targetFile) | Out-Null } catch {}
+    Write-Error "Zusammensetzen leider fehlgeschlagen: $($_.Exception.Message)"
+    exit -1
+} finally {
+    $WA.destroy()
 }
 
-$WA.destroy()
+$progress.success()
 
 exit 0
