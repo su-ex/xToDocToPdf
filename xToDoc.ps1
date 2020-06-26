@@ -183,10 +183,11 @@ try {
         }
 
         foreach ($p in $pieces) {
+            $pdfHeadingText = $d.desc
             if ($p.flags.ContainsKey("headingTier")) {
                 $pdfHeadingTier = $p.flags.headingTier
+                $pdfHeadingText = $p.desc
             }
-            $pdfHeadingText = ItIf $p.desc $d.desc
 
             # check if file exists while retrieving file type
             $extension = (Get-Item $p.path -ErrorAction Stop).Extension
