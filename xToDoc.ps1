@@ -108,7 +108,7 @@ try {
 }
 
 Write-Debug "Description before tree selection:"
-$description | Select-Object -Property * -ExcludeProperty raw,asset | Format-Table | Out-String | Write-Debug
+$description | Select-Object -Property * -ExcludeProperty rawflags,asset | Format-Table | Out-String | Write-Debug
 
 $continue = showTree $description
 if ($continue -ne $true) {
@@ -117,7 +117,7 @@ if ($continue -ne $true) {
 }
 
 Write-Debug "Description after tree selection:"
-$description | Select-Object -Property * -ExcludeProperty raw,asset | Format-Table | Out-String | Write-Debug
+$description | Select-Object -Property * -ExcludeProperty rawflags,asset | Format-Table | Out-String | Write-Debug
 
 # write selected elements of description to file
 setDescription $selectedDescriptionFile $description

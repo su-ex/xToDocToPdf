@@ -1,6 +1,6 @@
-[regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+((?<flags>[a-z0-9]*)>)?(?<path>[^:\*\?"<>\|]*)$'
+[regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+(?<rawflags>((?<flags>[a-z0-9]*)>))?(?<path>[^:\*\?"<>\|]*)$'
 [regex]$flagsExtractionPattern = '^(?=.*a(?<alphabetical>r?))?(?=.*s(?<skiplang>))?(?=.*c(?<custombasepath>\d*))?(?=.*h(?<headingtier>[1-9]?))?.*$'
-$insertionPlaceholder = '${raw}'
+$insertionPlaceholder = '${disabled}${indent}${desc}: ${rawflags}${path}'
 
 [regex]$pdfFilenameInfoExtraction = '^(?=.*__(?<desc>.*)__)?(?=.*##(?<headingtier>[1-9])##)?.*$'
 
@@ -22,7 +22,7 @@ Function getDescription($path) {
         }
         
         # basic capture groups
-        $disabled, $indent, $desc, $path = $m.Groups['disabled', 'indent', 'desc', 'path']
+        $disabled, $indent, $desc, $rawFlags, $path = $m.Groups['disabled', 'indent', 'desc', 'rawflags', 'path']
         
         # flag capture groups
         $f = $flagsExtractionPattern.Match($m.Groups['flags'].Value)
@@ -63,11 +63,11 @@ Function getDescription($path) {
 
         # add each new successfully parsed entry to the list
         $pieces.Add([PSCustomObject]@{
-            raw = $line
             desc = $desc.Value
             path = $path.Value
             enabled = $disabled.Length -eq 0
             indent = $indent.Length
+            rawFlags = $rawFlags.Value
             flags = $flags
             asset = $Null
         }) | Out-Null
@@ -81,7 +81,11 @@ Function getDescription($path) {
 Function setDescription($path, $description) {
     $description | ForEach-Object {
         replaceTokens $insertionPlaceholder @{
-            raw = $_.raw
+            disabled = IIf $_.enabled "" ";"
+            indent = "`t" * $_.indent
+            desc = $_.desc
+            rawflags = $_.rawFlags
+            path = $_.path
         }
     } | Out-File -FilePath $path
 }
