@@ -44,13 +44,23 @@ if (${target-pdf-file} -ne "") {
     }
 }
 
-# $WA = WordAbstraction
+$wpeh = WordPdfExportHelper $sourceWordFile
 
 # $progress = ProgressHelper("Generiere Word-Dokument ...")
 # $progress.setTotalOperations($totalOperations)
 
 # try {
-    getPdfReplacementPages $sourceWordFile
+    "replacements:"
+    $replacements = $wpeh.getPdfReplacementPages()
+    $replacements
+    "hide"
+    $wpeh.hidePlaceholders()
+    "export"
+    $wpeh.export($targetPdfFile)
+    "destroy"
+    $wpeh.destroy()
+    "overlay"
+    overlayPages($targetPdfFile, $replacements)
 # } catch {
 #     try { $WA.saveAndClose($targetFile) | Out-Null } catch {}
 #     Write-Error "Zusammensetzen leider fehlgeschlagen: $($_.Exception.Message)"
