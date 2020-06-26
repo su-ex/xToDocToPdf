@@ -88,7 +88,7 @@ Function setDescription($path, $description) {
 
 Function getDescribedFolder([string]$Path, [switch]$Recurse, [array]$Extensions) {
     $files = (
-        Get-ChildItem $Path -Recurse -Name |
+        Get-ChildItem $Path -Recurse:$Recurse -Name |
         ForEach-Object { makePathAbsolute $Path $_ } |
         Where-Object { $Extensions.Contains((Get-Item $_).Extension.ToLower()) } |
         Sort-Object
