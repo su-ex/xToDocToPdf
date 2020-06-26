@@ -52,7 +52,7 @@ Function getDescription($path) {
         }
         If ($headingTier.Success) {
             if ($headingTier.Value -eq "") {
-                $flags["headingTier"] = $indent.Length
+                $flags["headingTier"] = $indent.Length + 1
             } else {
                 $flags["headingTier"] = $headingTier.Value
             }
