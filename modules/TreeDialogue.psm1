@@ -8,6 +8,15 @@ function showTree($description) {
         }
     }
 
+    Function disableChildsOfUnckeckedParents($node, $recurse = $true) {
+        foreach ($n in $node.Nodes) {
+            if ($n.Parent -and !$n.Parent.Checked) {
+                $n.Checked = $False
+            }
+            if ($recurse) { disableChildsOfUnckeckedParents $n $recurse }
+        }
+    }
+
     $window = New-Object System.Windows.Forms.Form
     $window.ClientSize = '342, 502'
     $window.FormBorderStyle = 'FixedDialog'
@@ -19,16 +28,13 @@ function showTree($description) {
     $treeView.CheckBoxes = $true
 
     $treeView.Add_AfterCheck({
-        if ($_.Node.Checked) {
+        if ($_.Node.Checked) { # enable parents too
             if ($_.Node.Parent) {
                 $_.Node.Parent.Checked = $True
             }
-        } else {
-            if ($_.Node.Nodes.Count -gt 0) {
-                foreach ($n in $_.Node.Nodes) {
-                    $n.Checked = $False
-                }
-            }
+        } else { # disable childs too
+            # will recurse by itself
+            disableChildsOfUnckeckedParents $_.Node $false
         }
     })
 
@@ -54,11 +60,8 @@ function showTree($description) {
         $lastIndent = $d.indent
     }
 
-    foreach ($n in $treeView.Nodes) {
-        if ($n.Parent -and !$n.Parent.Checked) {
-            $n.Checked = $False
-        }
-    }
+    # there might be childs of disabled parents, disable the childs too before showing tree
+    disableChildsOfUnckeckedParents $treeView.Nodes
 
     $treeView.ExpandAll()
 
