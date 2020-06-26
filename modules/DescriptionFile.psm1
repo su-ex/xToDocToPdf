@@ -1,8 +1,8 @@
 [regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+((?<flags>[a-z0-9]*)>)?(?<path>[^:\*\?"<>\|]*)$'
-[regex]$flagsExtractionPattern = '(?=.*a(?<alphabetical>r?))?(?=.*s(?<skiplang>))?(?=.*c(?<custombasepath>\d*))?(?=.*h(?<headingtier>[1-9]?))?.*'
+[regex]$flagsExtractionPattern = '^(?=.*a(?<alphabetical>r?))?(?=.*s(?<skiplang>))?(?=.*c(?<custombasepath>\d*))?(?=.*h(?<headingtier>[1-9]?))?.*$'
 $insertionPlaceholder = '${raw}'
 
-[regex]$pdfFilenameInfoExtraction = '__(?<desc>.*)__(##(?<headingtier>[1-9])##)?'
+[regex]$pdfFilenameInfoExtraction = '^(?=.*__(?<desc>.*)__)?(?=.*##(?<headingtier>[1-9])##)?.*$'
 
 Import-Module "$PSScriptRoot\HelperFunctions.psm1" -Force
 
@@ -94,37 +94,35 @@ Function getDescribedFolder([string]$Path, [switch]$Recurse, [array]$Extensions)
         Sort-Object
     )
 
-    $piecesi = [System.Collections.ArrayList]@()
+    $pieces = [System.Collections.ArrayList]@()
     foreach($file in $files) {
         $nameWithoutExtension = (Get-Item $file).BaseName
         
-        # flag capture groups
+        # capture info from filename
         $f = $pdfFilenameInfoExtraction.Match($nameWithoutExtension)
-        # $f | Format-List | Out-String | Write-Debug
         $desc, $headingTier = $f.Groups['desc', 'headingtier']
 
+        # use desc text captured from filename, otherwise use filename itself 
         $descValue = $nameWithoutExtension
         If ($desc.Success) {
             $descValue = $desc.Value
         }
 
-        #interpret flags
+        #add flags
         $flags = @{}
         If ($headingTier.Success) {
             $flags["headingTier"] = $headingTier.Value
         }
 
         # add each new successfully parsed entry to the list
-        $piecesi.Add([PSCustomObject]@{
-            raw = $Null
+        $pieces.Add([PSCustomObject]@{
             desc = $descValue
             path = $file
             enabled = $true
-            indent = -1
             flags = $flags
             asset = $Null
         }) | Out-Null
     }
 
-    return $piecesi
+    return $pieces
 }
