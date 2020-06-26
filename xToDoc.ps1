@@ -63,7 +63,7 @@ try {
 
 # check if template description file exists and make path always absolute
 try {
-    $Script:templateDescriptionFile = Resolve-Path ${template-description-file} -ErrorAction Stop
+    $Script:templateDescriptionFile = Resolve-Path (makePathAbsolute $workingDirectory ${template-description-file}) -ErrorAction Stop
 } catch {
     Write-Error "Die Beschreibungsdatei der Vorlagen existiert nicht: $_"
     exit -1
