@@ -5,9 +5,6 @@ class WordAbstraction {
     $Word = $Null
     $docm = $Null
 
-    $tempPath1 = ""
-    $tempPath2 = ""
-
     WordAbstraction() {
         $this.Word = New-Object -ComObject Word.Application
         $this.Word.Visible = $False
