@@ -22,15 +22,13 @@ Import-Module "$ScriptPath\modules\HelperFunctions.psm1" -Force
 try {
     $Script:workingDirectory = Resolve-Path ${working-directory} -ErrorAction Stop
 } catch {
-    Write-Error "Das Arbeitsverzeichnis existiert nicht: $_"
-    exit -1
+    exitError "Das Arbeitsverzeichnis existiert nicht: $_"
 }
 
 # base source file upon working directory
 $sourceWordFile = makePathAbsolute $workingDirectory ${source-word-file}
 if (-not (Test-Path $sourceWordFile)) {
-    Write-Error "Das Quelldokument $sourceWordFile existiert nicht!"
-    exit -1
+    exitError "Das Quelldokument $sourceWordFile existiert nicht!"
 }
 
 # base target file upon working directory from 
@@ -39,8 +37,7 @@ if (${target-pdf-file} -ne "") {
     $targetPdfFile = makePathAbsolute $workingDirectory ${target-pdf-file}
 
     if (-not (Split-Path $targetPdfFile | Test-Path)) {
-        Write-Error "Das Verzeichnis, in dem die PDF-Datei gespeichert werden soll, existiert nicht!"
-        exit -1
+        exitError "Das Verzeichnis, in dem die PDF-Datei gespeichert werden soll, existiert nicht!"
     }
 }
 
@@ -63,8 +60,7 @@ try {
     $progress.update("Überlagere Seiten")
     overlayPdfPages $targetPdfFile $replacements
 } catch {
-    Write-Error "Export leider fehlgeschlagen: $($_.Exception.Message)"
-    exit -1
+    exitError "Export leider fehlgeschlagen: $($_.Exception.Message)"
 } finally {
     $wpeh.destroy()
     $progress.finish()

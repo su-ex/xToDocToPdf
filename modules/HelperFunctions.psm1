@@ -19,3 +19,21 @@ Function makePathAbsolute([String]$base, [String]$child) {
         return $child
     }
 }
+
+# see: https://mcpmag.com/articles/2016/06/09/display-gui-message-boxes-in-powershell.aspx
+Add-Type -AssemblyName PresentationFramework
+
+Function infoBox($message) {
+    [System.Windows.MessageBox]::Show($message, 'Information', 'OK', 'Information')
+}
+
+Function yesNoBox($title, $message, $default = 'Yes', $icon = 'Question') {
+    return [System.Windows.MessageBox]::Show($message, $title, 'YesNo', $icon, $default)
+}
+
+Function exitError($message) {
+    if ($message) {
+        [System.Windows.MessageBox]::Show($message, 'Fehlgeschlagen', 'OK', 'Stop')
+    }
+    exit -1
+}

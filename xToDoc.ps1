@@ -38,8 +38,7 @@ $pdfExtensions = @(".pdf")
 try {
     $Script:workingDirectory = Resolve-Path ${working-directory} -ErrorAction Stop
 } catch {
-    Write-Error "Das Arbeitsverzeichnis existiert nicht: $_"
-    exit -1
+    exitError "Das Arbeitsverzeichnis existiert nicht: $_"
 }
 
 # base relative paths upon working directory
@@ -49,7 +48,7 @@ $selectedDescriptionFile = makePathAbsolute $workingDirectory ${selected-descrip
 # ask if existing target document should be deleted or check if its base path exists
 try {
     if (Test-Path $targetFile) {
-        if ($host.ui.PromptForChoice('Zieldokument existiert bereits', "Soll $targetFile überschrieben werden?", @("Ja", "Nein"), 1) -eq 1) {
+        if ((yesNoBox 'Zieldokument existiert bereits' "Soll $targetFile überschrieben werden?" 'No' 'Warning') -eq 'No') {
             throw "Abgebrochen"
         }
         Remove-Item $targetFile -ErrorAction Stop
@@ -57,27 +56,24 @@ try {
         throw "Das Verzeichnis, in das das Zieldokument soll, existiert nicht!"
     }
 } catch {
-    Write-Error $_.Exception.Message
-    exit -1
+    exitError $_.Exception.Message
 }
 
 # check if template description file exists and make path always absolute
 try {
     $Script:templateDescriptionFile = Resolve-Path (makePathAbsolute $workingDirectory ${template-description-file}) -ErrorAction Stop
 } catch {
-    Write-Error "Die Beschreibungsdatei der Vorlagen existiert nicht: $_"
-    exit -1
+    exitError "Die Beschreibungsdatei der Vorlagen existiert nicht: $_"
 }
 
 # ask if existing selected description should be used or check if selected description's base path exists
 $descriptionFile = $templateDescriptionFile
 if (Test-Path $selectedDescriptionFile) {
-    if ($host.ui.PromptForChoice('Auswahl bereits getroffen', "Soll die bereits getroffene Auswahl verwendet werden?`nWenn nicht, wird sie überschrieben.", @("Ja", "Nein"), 0) -eq 0) {
+    if ((yesNoBox 'Auswahl bereits getroffen' "Soll die bereits getroffene Auswahl verwendet werden?`nWenn nicht, wird sie überschrieben.") -eq 'Yes') {
         $descriptionFile = $selectedDescriptionFile
     }
 } elseif (-not (Split-Path $selectedDescriptionFile | Test-Path)) {
-    Write-Error "Das Verzeichnis, in dem die Datei mit der getroffenen Auswahl gespeichert werden soll, existiert nicht!"
-    exit -1
+    exitError "Das Verzeichnis, in dem die Datei mit der getroffenen Auswahl gespeichert werden soll, existiert nicht!"
 }
 
 # replacement variables stuff
@@ -87,15 +83,13 @@ if ($replaceVariables) {
     $excelWorkbookFile = makePathAbsolute $workingDirectory ${excel-workbook-file}
     
     if (-not (Test-Path $excelWorkbookFile)) {
-        Write-Error "Die Excel-Arbeitsmappe $excelWorkbookFile existiert nicht!"
-        exit -1
+        exitError "Die Excel-Arbeitsmappe $excelWorkbookFile existiert nicht!"
     }
         
     try {
         $Script:replacementVariables = Get-ExcelTable $excelWorkbookFile ${excel-table-name} ${excel-worksheet-name}
     } catch {
-        Write-Error "Beim Auslesen der Tabelle mit den Variablen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmt z. B. der Tabellenname???"
-        exit -1
+        exitError "Beim Auslesen der Tabelle mit den Variablen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmt z. B. der Tabellenname???"
     }
 }
 
@@ -103,8 +97,7 @@ if ($replaceVariables) {
 try {
     $Script:description = getDescription $descriptionFile
 } catch {
-    Write-Error "Die Beschreibungsdatei konnte nicht ausgelesen werden: $($_.Exception.Message)"
-    exit -1
+    exitError "Die Beschreibungsdatei konnte nicht ausgelesen werden: $($_.Exception.Message)"
 }
 
 Write-Debug "Description before tree selection:"
@@ -112,8 +105,7 @@ $description | Select-Object -Property * -ExcludeProperty rawflags,asset | Forma
 
 $continue = showTree $description
 if ($continue -ne $true) {
-    Write-Error "Abgebrochen"
-    exit -1
+    exitError "Abgebrochen"
 }
 
 Write-Debug "Description after tree selection:"
@@ -239,8 +231,7 @@ try {
     if (-not $WA.saveAndClose($targetFile)) { $progress.error() }
 } catch {
     try { $WA.saveAndClose($targetFile) | Out-Null } catch {}
-    Write-Error "Zusammensetzen leider fehlgeschlagen: $($_.Exception.Message)"
-    exit -1
+    exitError "Zusammensetzen leider fehlgeschlagen: $($_.Exception.Message)"
 } finally {
     $WA.destroy()
     $progress.finish()

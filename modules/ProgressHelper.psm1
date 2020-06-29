@@ -1,3 +1,5 @@
+Import-Module "$PSScriptRoot\HelperFunctions.psm1" -Force
+
 Add-Type -AssemblyName System.Windows.Forms
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
@@ -86,7 +88,7 @@ class ProgressHelper {
         $this.ObjLabel.Text = "Abgeschlossen"
         $this.ObjForm.Refresh()
 
-        Write-Host "Erfolgreich! :-)"
+        infoBox "Erfolgreich! :-)"
     }
 
     [void] finish() {
