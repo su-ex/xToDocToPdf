@@ -2,6 +2,14 @@ $pdfMagic = "################################PDF################################
 $pdfFilePrefix = "Datei: "
 $pdfPagePrefix = "Seite "
 
+# see: https://stackoverflow.com/questions/53170039/powershell-unable-to-find-type-microsoft-office-interop-word-wdsaveformat
+$WdTypes = Add-Type -AssemblyName 'Microsoft.Office.Interop.Word' -PassThru
+$WdExportFormat = $wdTypes | Where-Object {$_.Name -eq "WdExportFormat"}
+$WdExportOptimizeFor = $wdTypes | Where-Object {$_.Name -eq "WdExportOptimizeFor"}
+$WdExportRange = $wdTypes | Where-Object {$_.Name -eq "WdExportRange"}
+$WdExportItem = $wdTypes | Where-Object {$_.Name -eq "WdExportItem"}
+$WdExportCreateBookmarks = $wdTypes | Where-Object {$_.Name -eq "WdExportCreateBookmarks"}
+
 class WordPdfExportHelper {
     $Word = $Null
     $doc = $Null
@@ -59,16 +67,16 @@ class WordPdfExportHelper {
         # taken from recorded Word macro and https://stackoverflow.com/questions/57502233/how-to-set-parameters-for-saveas-dialog-in-word-application
         $this.doc.ExportAsFixedFormat(
             $targetPdfFile,
-            [Microsoft.Office.Interop.Word.WdExportFormat]::wdExportFormatPDF,
+            $Script:WdExportFormat::wdExportFormatPDF,
             $false,
-            [Microsoft.Office.Interop.Word.WdExportOptimizeFor]::wdExportOptimizeForPrint,
-            [Microsoft.Office.Interop.Word.WdExportRange]::wdExportAllDocument,
+            $Script:WdExportOptimizeFor::wdExportOptimizeForPrint,
+            $Script:WdExportRange::wdExportAllDocument,
             0,
             0,
-            [Microsoft.Office.Interop.Word.WdExportItem]::wdExportDocumentContent,
+            $Script:WdExportItem::wdExportDocumentContent,
             $true,
             $true,
-            [Microsoft.Office.Interop.Word.WdExportCreateBookmarks]::wdExportCreateWordBookmarks,
+            $Script:WdExportCreateBookmarks::wdExportCreateHeadingBookmarks,
             $true,
             $true,
             $false
