@@ -136,51 +136,55 @@ try {
         # $d | Format-List | Out-String | Write-Debug
 
         # set template path (relative to description file if custom base path flag not set)
-        $path = Split-Path $templateDescriptionFile
+        $basePath = Split-Path $templateDescriptionFile
         if ($d.flags.ContainsKey("customBasePath")) {
             if ($d.flags.customBasePath -lt 0 -or $d.flags.customBasePath -ge $customBasePaths.Count) {
                 throw "Kein $($d.flags.customBasePath + 1). benutzerdefinierter Basispfad als Parameter übergeben!"
             }
 
-            $path = makePathAbsolute $workingDirectory $customBasePaths[$d.flags.customBasePath]
+            $basePath = makePathAbsolute $workingDirectory $customBasePaths[$d.flags.customBasePath]
         }
 
         # append language folder if not skipped
         if (-not $d.flags.ContainsKey("skipLang")) {
-            $path = Join-Path -Path $path -ChildPath $lang
+            $basePath = Join-Path -Path $basePath -ChildPath $lang
         }
 
         # append path from description if it's relative otherwise use it directly
-        $path = makePathAbsolute $path $d.path
+        $d.path = makePathAbsolute $basePath $d.path
 
-        $pieces = [System.Collections.ArrayList]@()
+        [System.Collections.Queue]$pieces = @()
+        $pieces = New-Object System.Collections.Queue  
+        $pieces.Enqueue($d) | Out-Null
+        $pieces | Format-Table
+        $pieces.Count
+        while ($pieces.Count -gt 0) {
+            Write-Host "hier"
+            $p = $pieces.Dequeue()
+            Write-Host "hier2"
+            $p | Format-List
 
-        if ($d.flags.ContainsKey("alphabetical")) {
-            if (-not (Get-Item $path) -is [System.IO.DirectoryInfo]) {
-                throw "$path ist kein Verzeichnis!"
-            }
-            
-            $gottenFiles = (getDescribedFolder -Path $path -Recurse:($d.flags.alphabetical) -Extensions ($wordExtensions + $pdfExtensions))
-            foreach ($s in $gottenFiles) {
-                $pieces.Add($s) | Out-Null
-            }
-        } else {
-            $d.path = $path
-            $pieces.Add($d) | Out-Null
-        }
-
-        $pdfHeadingTier = "None"
-        if ($d.flags.ContainsKey("headingTier")) {
-            $pdfHeadingTier = $d.flags.headingTier
-        }
-
-        foreach ($p in $pieces) {
-            $pdfHeadingText = $d.desc
+            $pdfHeadingTier = "None"
+                ## ToDo: add to list, later remove from list on first pdf file
+            $pdfHeadingText = $p.desc
             if ($p.flags.ContainsKey("headingTier")) {
                 $pdfHeadingTier = $p.flags.headingTier
                 $pdfHeadingText = $p.desc
             }
+            
+            if ($p.flags.ContainsKey("alphabetical")) {
+                if (-not (Get-Item $p.path) -is [System.IO.DirectoryInfo]) {
+                    throw "$($p.path) ist kein Verzeichnis!"
+                }
+                
+                $gottenFiles = (getDescribedFolder -Path $p.path -Recurse:($p.flags.alphabetical) -Extensions ($wordExtensions + $pdfExtensions) -Indent ($p.indent + 1))
+                foreach ($s in $gottenFiles) {
+                    $pieces.Enqueue($s) | Out-Null
+                }
 
+                continue
+            }
+            $p | Format-List
             # check if file exists while retrieving file type
             $extension = (Get-Item $p.path -ErrorAction Stop).Extension
 

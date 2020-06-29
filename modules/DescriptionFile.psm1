@@ -2,7 +2,7 @@
 [regex]$flagsExtractionPattern = '^(?=.*a(?<alphabetical>r?))?(?=.*s(?<skiplang>))?(?=.*c(?<custombasepath>\d*))?(?=.*h(?<headingtier>[1-9]?))?.*$'
 $insertionPlaceholder = '${disabled}${indent}${desc}: ${rawflags}${path}'
 
-[regex]$pdfFilenameInfoExtraction = '^(?=.*__(?<desc>.*)__)?(?=.*##(?<headingtier>[1-9])##)?.*$'
+[regex]$pdfFilenameInfoExtraction = '^(?=.*__(?<desc>.*)__)?(?=.*##(?<headingtier>[1-9]?)##)?.*$'
 
 Import-Module "$PSScriptRoot\HelperFunctions.psm1" -Force
 
@@ -90,17 +90,31 @@ Function setDescription($path, $description) {
     } | Out-File -FilePath $path
 }
 
-Function getDescribedFolder([string]$Path, [switch]$Recurse, [array]$Extensions) {
+Function getDescribedFolder([string]$Path, [switch]$Recurse, [array]$Extensions, [int]$Indent) {
     $files = (
-        Get-ChildItem $Path -Recurse:$Recurse -Name |
+        Get-ChildItem $Path -Name |
         ForEach-Object { makePathAbsolute $Path $_ } |
-        Where-Object { $Extensions.Contains((Get-Item $_).Extension.ToLower()) } |
         Sort-Object
     )
 
     $pieces = [System.Collections.ArrayList]@()
     foreach($file in $files) {
-        $nameWithoutExtension = (Get-Item $file).BaseName
+        #add flags
+        $flags = @{}
+
+        $item = Get-Item $file
+
+        if ($Extensions.Contains($item.Extension.ToLower())) {
+            # go on
+        } elseif ($Recurse.IsPresent -and $item -is [System.IO.DirectoryInfo]) {
+            $flags["alphabetical"] = $true
+            # and go on
+        } else {
+            # skip this
+            continue
+        }
+
+        $nameWithoutExtension = $item.BaseName
         
         # capture info from filename
         $f = $pdfFilenameInfoExtraction.Match($nameWithoutExtension)
@@ -112,8 +126,7 @@ Function getDescribedFolder([string]$Path, [switch]$Recurse, [array]$Extensions)
             $descValue = $desc.Value
         }
 
-        #add flags
-        $flags = @{}
+        # other flags
         If ($headingTier.Success) {
             $flags["headingTier"] = $headingTier.Value
         }
@@ -123,6 +136,7 @@ Function getDescribedFolder([string]$Path, [switch]$Recurse, [array]$Extensions)
             desc = $descValue
             path = $file
             enabled = $true
+            indent = $Indent
             flags = $flags
             asset = $Null
         }) | Out-Null
