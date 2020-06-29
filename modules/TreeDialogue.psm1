@@ -1,5 +1,7 @@
 Add-Type -AssemblyName System.Windows.Forms
+[System.Windows.Forms.Application]::EnableVisualStyles()
 
+# see: https://stackoverflow.com/questions/27904837/powershell-net-collect-all-checked-nodes
 function showTree($description) {
     $ButtonOK_Click = {
         foreach ($d in $description) {

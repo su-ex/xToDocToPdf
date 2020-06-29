@@ -208,7 +208,7 @@ try {
     }
 
     if ($replaceVariables) { 
-        # $progress.update("Variablen ersetzen")
+        $progress.update("Variablen ersetzen")
         
         foreach ($variable in $replacementVariables) {
             $name = $variable.Variable
@@ -243,8 +243,7 @@ try {
     exit -1
 } finally {
     $WA.destroy()
+    $progress.finish()
 }
-
-$progress.success()
 
 exit 0

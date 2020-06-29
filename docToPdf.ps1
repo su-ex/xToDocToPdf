@@ -67,8 +67,7 @@ try {
     exit -1
 } finally {
     $wpeh.destroy()
+    $progress.finish()
 }
-
-$progress.success()
 
 exit 0
