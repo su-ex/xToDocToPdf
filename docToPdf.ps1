@@ -46,7 +46,7 @@ if (${target-pdf-file} -ne "") {
 
 $wpeh = WordPdfExportHelper $sourceWordFile
 
-$progress = ProgressHelper("Exportiere Word-Dokument als PDF ...")
+$progress = ProgressHelper "Exportiere Word-Dokument als PDF ..."
 $progress.setTotalOperations(4)
 
 try {

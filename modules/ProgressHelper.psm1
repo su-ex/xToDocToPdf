@@ -17,9 +17,10 @@ class ProgressHelper {
         $this.i = 1
     }
 
-    [void] update($operation) {
+    [void] update([String] $operation) {
             $this.currentOperation = $operation
-            Write-Progress -Activity $this.activityName -Status "Aufgabe $($this.i) von $($this.totalOperations)" -PercentComplete (($this.i/$this.totalOperations)*100) -CurrentOperation $this.currentOperation
+            while ($this.totalOperations -lt $this.i -or $this.totalOperations -le 0) { $this.totalOperations += 1 }
+            Write-Progress -Activity $this.activityName -Status "Aufgabe $($this.i) von $($this.totalOperations)" -PercentComplete (($this.i / $this.totalOperations) * 100) -CurrentOperation $this.currentOperation
             $this.i++
     }
 

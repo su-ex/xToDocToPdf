@@ -134,7 +134,7 @@ $customBasePaths | Format-List | Out-String | Write-Debug
 
 $WA = WordAbstraction
 
-$progress = ProgressHelper("Generiere Word-Dokument ...")
+$progress = ProgressHelper "Generiere Word-Dokument ..."
 $progress.setTotalOperations($totalOperations)
 
 try {
