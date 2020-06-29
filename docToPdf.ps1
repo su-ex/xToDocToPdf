@@ -46,29 +46,29 @@ if (${target-pdf-file} -ne "") {
 
 $wpeh = WordPdfExportHelper $sourceWordFile
 
-# $progress = ProgressHelper("Generiere Word-Dokument ...")
-# $progress.setTotalOperations($totalOperations)
+$progress = ProgressHelper("Exportiere Word-Dokument als PDF ...")
+$progress.setTotalOperations(4)
 
-# try {
-    "replacements:"
+try {
+    $progress.update("Bestimme Ersatzseiten")
     $replacements = $wpeh.getPdfReplacementPages()
-    $replacements
-    "hide"
-    $wpeh.hidePlaceholders()
-    "export"
-    $wpeh.export($targetPdfFile)
-    "destroy"
-    $wpeh.destroy()
-    "overlay"
-    overlayPdfPages $targetPdfFile $replacements
-# } catch {
-#     try { $WA.saveAndClose($targetFile) | Out-Null } catch {}
-#     Write-Error "Zusammensetzen leider fehlgeschlagen: $($_.Exception.Message)"
-#     exit -1
-# } finally {
-#     $WA.destroy()
-# }
+    $replacements | Out-String | Write-Debug
 
-# $progress.success()
+    $progress.update("Verstecke Platzhalter")
+    $wpeh.hidePlaceholders()
+    
+    $progress.update("Exportiere als PDF")
+    $wpeh.export($targetPdfFile)
+    
+    $progress.update("Überlagere Seiten")
+    overlayPdfPages $targetPdfFile $replacements
+} catch {
+    Write-Error "Export leider fehlgeschlagen: $($_.Exception.Message)"
+    exit -1
+} finally {
+    $wpeh.destroy()
+}
+
+$progress.success()
 
 exit 0

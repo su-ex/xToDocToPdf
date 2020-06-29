@@ -4,6 +4,11 @@ $pdfPagePrefix = "Seite "
 
 # see: https://stackoverflow.com/questions/53170039/powershell-unable-to-find-type-microsoft-office-interop-word-wdsaveformat
 $WdTypes = Add-Type -AssemblyName 'Microsoft.Office.Interop.Word' -PassThru
+
+$WdFindWrap = $wdTypes | Where-Object {$_.Name -eq "WdFindWrap"}
+$WdReplace  = $wdTypes | Where-Object {$_.Name -eq "WdReplace"}
+$WdInformation = $wdTypes | Where-Object {$_.Name -eq "WdInformation"}
+
 $WdExportFormat = $wdTypes | Where-Object {$_.Name -eq "WdExportFormat"}
 $WdExportOptimizeFor = $wdTypes | Where-Object {$_.Name -eq "WdExportOptimizeFor"}
 $WdExportRange = $wdTypes | Where-Object {$_.Name -eq "WdExportRange"}
@@ -25,10 +30,6 @@ class WordPdfExportHelper {
 
         $objSelection = $this.Word.Selection
 
-        $wdFindStop = 0
-        $wdReplaceNone = 0
-        $wdActiveEndPageNumber = 3
-
         $FindText = "$($Script:pdfMagic)^l$($Script:pdfFilePrefix)*^l$($Script:pdfPagePrefix)*^l$($Script:pdfMagic)"
         $MatchCase = $False
         $MatchWholeWord = $False
@@ -36,10 +37,10 @@ class WordPdfExportHelper {
         $MatchSoundsLike = $False
         $MatchAllWordForms = $False
         $Forward = $True
-        $Wrap = $wdFindStop
+        $Wrap = $Script:WdFindWrap::wdFindStop
         $Format = $False
         $ReplaceWith = ""
-        $Replace = $wdReplaceNone
+        $Replace = $Script:WdReplace::wdReplaceNone
 
         while ($objSelection.Find.Execute($FindText,$MatchCase,$MatchWholeWord,
         $MatchWildCards,$MatchSoundsLike,$MatchAllWordForms,$Forward,
@@ -47,7 +48,7 @@ class WordPdfExportHelper {
             $objSelection.Text -match "$($Script:pdfMagic)`v$($Script:pdfFilePrefix)(.*)`v$($Script:pdfPagePrefix)(.*)`v$($Script:pdfMagic)" | Out-Null
             $pdfReplacements.Add([PSCustomObject]@{
                 path = $matches[1]
-                docPageNumber = $objSelection.Information($wdActiveEndPageNumber)
+                docPageNumber = $objSelection.Information($Script:WdInformation::wdActiveEndPageNumber)
                 pdfPageNumber = $matches[2]
             }) | Out-Null
         }
