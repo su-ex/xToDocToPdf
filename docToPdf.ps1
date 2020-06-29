@@ -59,6 +59,8 @@ try {
     
     $progress.update("Überlagere Seiten")
     overlayPdfPages $targetPdfFile $replacements
+
+    $progress.success()
 } catch {
     exitError "Export leider fehlgeschlagen: $($_.Exception.Message)"
 } finally {

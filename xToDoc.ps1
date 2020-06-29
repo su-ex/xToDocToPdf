@@ -233,6 +233,8 @@ try {
     
     $progress.update("Speichern und schließen")
     if (-not $WA.saveAndClose($targetFile)) { $progress.error() }
+
+    $progress.success()
 } catch {
     try { $WA.saveAndClose($targetFile) | Out-Null } catch {}
     exitError "Zusammensetzen leider fehlgeschlagen: $($_.Exception.Message)"

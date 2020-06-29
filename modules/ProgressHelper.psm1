@@ -8,12 +8,12 @@ class ProgressHelper {
     [String] $currentOperation
     [int] $totalOperations = 100
     [int] $i = 1
-    [bool] $wasError = $false
+    [bool] $wasSuccessful = $false
 
     # see: https://gallery.technet.microsoft.com/scriptcenter/Progress-Bar-With-d3924344
-    [System.Windows.Forms.Form] $ObjForm
-    [System.Windows.Forms.Label] $ObjLabel
-    [System.Windows.Forms.ProgressBar] $PB
+    [Object] $ObjForm
+    [Object] $ObjLabel
+    [Object] $PB
 
     ProgressHelper([String] $activityName) {
         $this.activityName = $activityName
@@ -26,8 +26,8 @@ class ProgressHelper {
         $this.ObjForm.Width = 500
         $this.ObjForm.BackColor = "White"
 
-        $this.ObjForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedSingle
-        $this.ObjForm.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
+        $this.ObjForm.FormBorderStyle = 'FixedSingle'
+        $this.ObjForm.StartPosition = 'CenterScreen'
 
         ## -- Create The Label
         $this.ObjLabel = New-Object System.Windows.Forms.Label
@@ -84,15 +84,18 @@ class ProgressHelper {
     }
 
     [void] success() {
-        $this.PB.Value = 100
-        $this.ObjLabel.Text = "Abgeschlossen"
-        $this.ObjForm.Refresh()
-
-        infoBox "Erfolgreich! :-)"
+        $this.wasSuccessful = $true
     }
 
     [void] finish() {
-        if (-not $this.wasError) { $this.success() }
+        if ($this.wasSuccessful) {
+            $this.PB.Value = 100
+            $this.ObjLabel.Text = "Abgeschlossen"
+            $this.ObjForm.Refresh()
+    
+            infoBox "Erfolgreich! :-)"
+        }
+
         $this.ObjForm.Close()
     }
 }
