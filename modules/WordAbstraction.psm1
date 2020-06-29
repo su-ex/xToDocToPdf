@@ -11,15 +11,7 @@ class WordAbstraction {
         $this.docm = $this.Word.Documents.Open($this.docmPath, $False, $True)
     }
 
-    [void] add([String]$operation, [ScriptBlock]$job) {
-        $this.jobs.Enqueue([PSCustomObject]@{
-            operation = $operation
-            job = $job
-        })
-    }
-
     [boolean] concatenate($path1, $path2) {
-        #Write-Host "path1: $path1, path2: $path2"
         return $this.Word.Run("xToDoc.concatenate", [ref]"$path1", [ref]"$path2")
     }
 
