@@ -60,7 +60,7 @@ $wpeh = WordPdfExportHelper $sourceWordFile
     "destroy"
     $wpeh.destroy()
     "overlay"
-    overlayPages($targetPdfFile, $replacements)
+    overlayPdfPages $targetPdfFile $replacements
 # } catch {
 #     try { $WA.saveAndClose($targetFile) | Out-Null } catch {}
 #     Write-Error "Zusammensetzen leider fehlgeschlagen: $($_.Exception.Message)"
