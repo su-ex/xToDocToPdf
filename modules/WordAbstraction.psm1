@@ -15,12 +15,22 @@ class WordAbstraction {
         return $this.Word.Run("xToDoc.concatenate", "$path1", "$path2")
     }
 
-    [boolean] concatenatePdfPage($path, $pdfFile, $pdfPageNumber, $pdfHeadingTier, $pdfHeadingText) {
+    [boolean] concatenatePdfPage($path, $pdfFile, $pdfPageNumber, $pdfHeadings) {
         if (-not $this.concatenate($path, $this.templatePdfPage)) { return $false }
+
         if (-not $this.replaceLastVariable($path, "pdfFile", $pdfFile)) { return $false }
         if (-not $this.replaceLastVariable($path, "pdfPageNumber", $pdfPageNumber)) { return $false }
-        if (-not $this.replaceLastVariable($path, "pdfHeadingTier", $pdfHeadingTier)) { return $false }
-        if (-not $this.replaceLastVariable($path, "pdfHeadingText", $pdfHeadingText)) { return $false }
+
+        $pdfHeadingLines = [System.Collections.ArrayList]@()
+        $i = 0
+        while ($i -lt $pdfHeadings.Count) {
+            if ($pdfHeadings[$i].pdfHeadingTier -ne "None" -or $i -eq $pdfHeadings.Count-1) {
+                $pdfHeadingLines.Add("{>pdfHeading$($pdfHeadings[$i].pdfHeadingTier)<}$($pdfHeadings[$i].pdfHeadingText)")
+            }
+            $i += 1
+        }
+        if (-not $this.replaceLastVariable($path, "pdfHeadings", $pdfHeadingLines -join "^p")) { return $false }
+
         return $true
     }
 

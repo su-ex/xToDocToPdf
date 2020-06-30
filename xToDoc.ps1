@@ -130,6 +130,10 @@ $progress = ProgressHelper "Generiere Word-Dokument ..."
 $progress.setTotalOperations($totalOperations)
 
 try {
+    $pdfHeadings = [System.Collections.ArrayList]@()
+    $pdfRecursiveHeading = $false
+    $pdfRecursiveHeadingStartIndent = 0
+
     foreach ($d in $description) {
         $progress.update("Hänge $($d.desc) an")
         # Write-Debug "current to concatenate:"
@@ -153,21 +157,12 @@ try {
         # append path from description if it's relative otherwise use it directly
         $d.path = makePathAbsolute $basePath $d.path
 
-        [System.Collections.Queue]$pieces = @()
-        $pieces = New-Object System.Collections.Queue  
+        $pieces = [System.Collections.Queue]@()
         $pieces.Enqueue($d) | Out-Null
         
         while ($pieces.Count -gt 0) {
             $p = $pieces.Dequeue()
             $p | Format-List
-
-            $pdfHeadingTier = "None"
-                ## ToDo: add to list, later remove from list on first pdf file
-            $pdfHeadingText = $p.desc
-            if ($p.flags.ContainsKey("headingTier")) {
-                $pdfHeadingTier = $p.flags.headingTier
-                $pdfHeadingText = $p.desc
-            }
             
             # grab alphabetically sorted items from given folder if flag set
             if ($p.flags.ContainsKey("alphabetical")) {
@@ -179,13 +174,32 @@ try {
                 foreach ($s in $gottenFiles) {
                     $pieces.Enqueue($s) | Out-Null
                 }
+            }
 
-                # don't concatenate this
-                continue
+            # pdf heading stuff
+            $pdfHeadingTier = "None"
+            if ($p.indent -le $pdfRecursiveHeadingStartIndent) {
+                $pdfRecursiveHeading = $false
+            }
+            if ($p.flags.ContainsKey("headingTier")) {
+                if ($p.flags.headingTier -eq "r") {
+                    $pdfRecursiveHeading = $true
+                    $pdfRecursiveHeadingStartIndent = $p.indent
+                    $pdfHeadingTier = $p.indent+1
+                } else {
+                    $pdfHeadingTier = $p.flags.headingTier
+                }
+            } elseif ($pdfRecursiveHeading) {
+                $pdfHeadingTier = $p.indent+1
             }
             
-            # skip desc group only item
+            # if set only description, nothing to concatenate
             if ($p.flags.ContainsKey("descOnly")) {
+                $pdfHeadings.Add(@{
+                    pdfHeadingTier = $pdfHeadingTier
+                    pdfHeadingText = $p.desc
+                }) | Out-Null
+
                 continue
             }
 
@@ -198,7 +212,12 @@ try {
                 $nPages = getPdfPageNumber($p.path)
                 Write-Debug "pdf page number: $nPages"
                 for ($i = 1; $i -le $nPages; $i++) {
-                    if (-not $WA.concatenatePdfPage($targetFile, $p.path, $i, $pdfHeadingTier, $pdfHeadingText)) { $progress.error() }
+                    $pdfHeadings.Add(@{
+                        pdfHeadingTier = $pdfHeadingTier
+                        pdfHeadingText = $p.desc
+                    }) | Out-Null
+                    if (-not $WA.concatenatePdfPage($targetFile, $p.path, $i, $pdfHeadings)) { $progress.error() }
+                    $pdfHeadings.Clear()
                     $pdfHeadingTier = "None"
                 }
             } else {

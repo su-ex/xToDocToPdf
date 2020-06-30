@@ -40,6 +40,7 @@ Function getDescription($path) {
         $flags = @{}
         If ($alphabetical.Success) {
             $flags["alphabetical"] = $alphabetical.Value -eq 'r'
+            $flags["descOnly"] = $true
         }
         If ($skipLang.Success) {
             $flags["skipLang"] = $Null
