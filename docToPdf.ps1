@@ -62,6 +62,7 @@ try {
 
     $progress.success()
 } catch {
+    $_ | Out-String | Write-Error
     exitError "Export leider fehlgeschlagen: $($_.Exception.Message)"
 } finally {
     $wpeh.destroy()

@@ -1,8 +1,9 @@
 [regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+(?<rawflags>((?<flags>[a-z0-9]*)>))?(?<path>[^:\*\?"<>\|]*)$'
-[regex]$flagsExtractionPattern = '^(?=.*a(?<alphabetical>r?))?(?=.*s(?<skiplang>))?(?=.*c(?<custombasepath>\d*))?(?=.*h(?<headingtier>[1-9]?))?.*$'
+[regex]$flagsExtractionPattern = '^(?=.*a(?<alphabetical>r?))?(?=.*s(?<skiplang>))?(?=.*c(?<custombasepath>\d*))?(?=.*h(?<headingtier>[1-9r]?))?.*$'
 $insertionPlaceholder = '${disabled}${indent}${desc}: ${rawflags}${path}'
 
-[regex]$pdfFilenameInfoExtraction = '^(?=.*__(?<desc>.*)__)?(?=.*##(?<headingtier>[1-9]?)##)?.*$'
+[regex]$pdfFilenameInfoExtraction = '^(?=.*__(?<desc>.*)__)?(?=.*##(?<headingtier>[1-9r]?)##)?.*$'
+$pdfFilenameInfoReplace = @(@('##.*##', ''))
 
 Import-Module "$PSScriptRoot\HelperFunctions.psm1" -Force
 
@@ -57,6 +58,9 @@ Function getDescription($path) {
                 $flags["headingTier"] = $headingTier.Value
             }
         }
+        if ($path.Value -eq "") {
+            $flags["descOnly"] = $true
+        }
 
         Write-Debug "flags:"
         $flags | Format-List | Out-String | Write-Debug 
@@ -96,10 +100,9 @@ Function getDescribedFolder([string]$Path, [switch]$Recurse, [array]$Extensions,
         Sort-Object |
         ForEach-Object { makePathAbsolute $Path $_ }
     )
-    infoBox ($files | Format-List | Out-String) | Out-Null
+    
     $pieces = [System.Collections.ArrayList]@()
     foreach($file in $files) {
-        infoBox ($file) | Out-Null
         #add flags
         $flags = @{}
 
@@ -108,13 +111,15 @@ Function getDescribedFolder([string]$Path, [switch]$Recurse, [array]$Extensions,
         while ($item.Extension -eq ".lnk") {
             $file = Get-ShortcutTargetPath $item
             $item = Get-Item $file
+            $nameWithoutExtension = [System.IO.Path]::GetFileNameWithoutExtension($nameWithoutExtension)
         }
 
+        $addSubPieces = $false
         if ($Extensions.Contains($item.Extension.ToLower())) {
             # go on
         } elseif ($Recurse.IsPresent -and $item -is [System.IO.DirectoryInfo]) {
-            $flags["alphabetical"] = $true
-            # and go on
+            $addSubPieces = $true
+            $flags["descOnly"] = $true
         } else {
             # skip this
             continue
@@ -128,9 +133,10 @@ Function getDescribedFolder([string]$Path, [switch]$Recurse, [array]$Extensions,
         $descValue = $nameWithoutExtension
         If ($desc.Success) {
             $descValue = $desc.Value
+        } else {
+            $descValue = replaceEachInString $descValue $pdfFilenameInfoReplace
         }
 
-        # other flags
         If ($headingTier.Success) {
             $flags["headingTier"] = $headingTier.Value
         }
@@ -144,6 +150,12 @@ Function getDescribedFolder([string]$Path, [switch]$Recurse, [array]$Extensions,
             flags = $flags
             asset = $Null
         }) | Out-Null
+
+        if ($addSubPieces) {
+            foreach ($sp in (getDescribedFolder -Path $file -Recurse:($Recurse) -Extensions $Extensions -Indent ($Indent + 1))) {
+                $pieces.Add($sp) | Out-Null
+            }
+        }
     }
 
     return $pieces

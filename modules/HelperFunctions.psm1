@@ -8,6 +8,14 @@ Function replaceTokens([String]$placeholderString, [hashtable]$tokens) {
 }
 
 
+Function replaceEachInString([string] $s, [array] $replacements) {
+    foreach ($replacement in $replacements) {
+        $s = $s -replace $replacement
+    }
+    return $s
+}
+
+
 
 Function makePathAbsolute([String]$base, [String]$child) {
     if (-not [System.IO.Path]::IsPathRooted($child)) {
@@ -34,7 +42,7 @@ function Get-ShortcutTargetPath($fileName) {
 Add-Type -AssemblyName PresentationFramework
 
 Function infoBox($message) {
-    [System.Windows.MessageBox]::Show($message, 'Information', 'OK', 'Information')
+    [System.Windows.MessageBox]::Show($message, 'Information', 'OK', 'Information') | Out-Null
 }
 
 Function yesNoBox($title, $message, $default = 'Yes', $icon = 'Question') {

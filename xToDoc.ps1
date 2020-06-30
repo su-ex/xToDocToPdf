@@ -24,7 +24,7 @@ if ($MyInvocation.MyCommand.CommandType -eq "ExternalScript") {
 }
 
 Import-Module "$ScriptPath\modules\WordAbstraction.psm1" -Force
-Import-Module "$ScriptPath\modules\DescriptionFile.psm1" -Force
+Import-Module "$ScriptPath\modules\DescriptionHelper.psm1" -Force
 Import-Module "$ScriptPath\modules\TreeDialogue.psm1" -Force
 Import-Module "$ScriptPath\modules\ProgressHelper.psm1" -Force
 Import-Module "$ScriptPath\modules\ExcelHelper.psm1" -Force
@@ -114,7 +114,7 @@ $description | Select-Object -Property * -ExcludeProperty rawflags,asset | Forma
 # write selected elements of description to file
 setDescription $selectedDescriptionFile $description
 
-$description = ($description | Where-Object {$_.enabled -and $_.path -ne ""})
+$description = ($description | Where-Object { $_.enabled })
 $totalOperations = 3
 if ($replaceVariables) { $totalOperations++ }
 foreach ($d in $description) { $totalOperations++ }
@@ -156,12 +156,9 @@ try {
         [System.Collections.Queue]$pieces = @()
         $pieces = New-Object System.Collections.Queue  
         $pieces.Enqueue($d) | Out-Null
-        $pieces | Format-Table
-        $pieces.Count
+        
         while ($pieces.Count -gt 0) {
-            Write-Host "hier"
             $p = $pieces.Dequeue()
-            Write-Host "hier2"
             $p | Format-List
 
             $pdfHeadingTier = "None"
@@ -172,6 +169,7 @@ try {
                 $pdfHeadingText = $p.desc
             }
             
+            # grab alphabetically sorted items from given folder if flag set
             if ($p.flags.ContainsKey("alphabetical")) {
                 if (-not (Get-Item $p.path) -is [System.IO.DirectoryInfo]) {
                     throw "$($p.path) ist kein Verzeichnis!"
@@ -182,9 +180,15 @@ try {
                     $pieces.Enqueue($s) | Out-Null
                 }
 
+                # don't concatenate this
                 continue
             }
-            $p | Format-List
+            
+            # skip desc group only item
+            if ($p.flags.ContainsKey("descOnly")) {
+                continue
+            }
+
             # check if file exists while retrieving file type
             $extension = (Get-Item $p.path -ErrorAction Stop).Extension
 
@@ -237,6 +241,7 @@ try {
     $progress.success()
 } catch {
     try { $WA.saveAndClose($targetFile) | Out-Null } catch {}
+    $_ | Out-String | Write-Error
     exitError "Zusammensetzen leider fehlgeschlagen: $($_.Exception.Message)"
 } finally {
     $WA.destroy()

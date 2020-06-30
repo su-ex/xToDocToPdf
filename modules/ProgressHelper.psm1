@@ -78,7 +78,6 @@ class ProgressHelper {
     }
 
     [void] error() {
-        $this.wasError = $true
         throw "Aufgabe `"$($this.currentOperation)`" konnte nicht ausgeführt werden."
     }
 
