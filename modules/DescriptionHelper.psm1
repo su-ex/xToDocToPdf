@@ -96,7 +96,7 @@ Function setDescription($path, $description) {
 
 Function getDescribedFolder([string]$Path, [switch]$Recurse, [array]$Extensions, [int]$Indent) {
     $files = (
-        Get-ChildItem $Path -Name -FollowSymlink |
+        Get-ChildItem $Path -Name |
         Sort-Object |
         ForEach-Object { makePathAbsolute $Path $_ }
     )
