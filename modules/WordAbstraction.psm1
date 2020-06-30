@@ -12,7 +12,7 @@ class WordAbstraction {
     }
 
     [boolean] concatenate($path1, $path2) {
-        return $this.Word.Run("xToDoc.concatenate", [ref]"$path1", [ref]"$path2")
+        return $this.Word.Run("xToDoc.concatenate", "$path1", "$path2")
     }
 
     [boolean] concatenatePdfPage($path, $pdfFile, $pdfPageNumber, $pdfHeadingTier, $pdfHeadingText) {
@@ -25,11 +25,11 @@ class WordAbstraction {
     }
 
     [boolean] replace($path, $text, $replacement, $replaceAll, $startEnd) {
-        return $this.Word.Run("xToDoc.replace", [ref]"$path", [ref]"$text", [ref]"$replacement", [ref]$replaceAll, [ref]$startEnd)
+        return $this.Word.Run("xToDoc.replace", "$path", "$text", "$replacement", $replaceAll, $startEnd)
     }
 
     [boolean] replaceVariable($path, $name, $value, $replaceAll, $startEnd) {
-        return $this.Word.Run("xToDoc.replace", [ref]"$path", [ref]"{{`$$name}}", [ref]"$value", [ref]$replaceAll, [ref]$startEnd)
+        return $this.Word.Run("xToDoc.replace", "$path", "{{`$$name}}", "$value", $replaceAll, $startEnd)
     }
 
     [boolean] replaceVariable($path, $name, $value) {
@@ -41,15 +41,15 @@ class WordAbstraction {
     }
 
     [boolean] updateHeadings($path) {
-        return $this.Word.Run("xToDoc.updateHeadings", [ref]"$path")
+        return $this.Word.Run("xToDoc.updateHeadings", "$path")
     }
 
     [boolean] updateFields($path) {
-        return $this.Word.Run("xToDoc.updateFields", [ref]"$path")
+        return $this.Word.Run("xToDoc.updateFields", "$path")
     }
 
     [boolean] saveAndClose($path) {
-        return $this.Word.Run("xToDoc.saveAndClose", [ref]"$path")
+        return $this.Word.Run("xToDoc.saveAndClose", "$path")
     }
 
     [void] destroy() {

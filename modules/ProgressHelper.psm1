@@ -24,7 +24,6 @@ class ProgressHelper {
         $this.ObjForm.Text = $this.activityName
         $this.ObjForm.Height = 100
         $this.ObjForm.Width = 500
-        $this.ObjForm.BackColor = "White"
 
         $this.ObjForm.FormBorderStyle = 'FixedSingle'
         $this.ObjForm.StartPosition = 'CenterScreen'
