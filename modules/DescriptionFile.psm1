@@ -92,17 +92,23 @@ Function setDescription($path, $description) {
 
 Function getDescribedFolder([string]$Path, [switch]$Recurse, [array]$Extensions, [int]$Indent) {
     $files = (
-        Get-ChildItem $Path -Name |
-        ForEach-Object { makePathAbsolute $Path $_ } |
-        Sort-Object
+        Get-ChildItem $Path -Name -FollowSymlink |
+        Sort-Object |
+        ForEach-Object { makePathAbsolute $Path $_ }
     )
-
+    infoBox ($files | Format-List | Out-String) | Out-Null
     $pieces = [System.Collections.ArrayList]@()
     foreach($file in $files) {
+        infoBox ($file) | Out-Null
         #add flags
         $flags = @{}
 
         $item = Get-Item $file
+        $nameWithoutExtension = $item.BaseName
+        while ($item.Extension -eq ".lnk") {
+            $file = Get-ShortcutTargetPath $item
+            $item = Get-Item $file
+        }
 
         if ($Extensions.Contains($item.Extension.ToLower())) {
             # go on
@@ -113,8 +119,6 @@ Function getDescribedFolder([string]$Path, [switch]$Recurse, [array]$Extensions,
             # skip this
             continue
         }
-
-        $nameWithoutExtension = $item.BaseName
         
         # capture info from filename
         $f = $pdfFilenameInfoExtraction.Match($nameWithoutExtension)

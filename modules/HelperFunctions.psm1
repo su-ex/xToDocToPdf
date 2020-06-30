@@ -7,6 +7,8 @@ Function replaceTokens([String]$placeholderString, [hashtable]$tokens) {
     return $placeholderString
 }
 
+
+
 Function makePathAbsolute([String]$base, [String]$child) {
     if (-not [System.IO.Path]::IsPathRooted($child)) {
         return [System.IO.Path]::GetFullPath((Join-Path -Path $base -ChildPath $child))
@@ -14,6 +16,19 @@ Function makePathAbsolute([String]$base, [String]$child) {
         return $child
     }
 }
+
+
+
+# see: https://stackoverflow.com/questions/46276418/how-to-follow-a-shortcut-in-powershell
+function Get-ShortcutTargetPath($fileName) {
+    $sh = New-Object -COM WScript.Shell
+    $targetPath = $sh.CreateShortcut($fileName).TargetPath 
+    [System.Runtime.Interopservices.Marshal]::ReleaseComObject($sh) | Out-Null
+    return $targetPath
+}
+
+
+### dialogue boxes
 
 # see: https://mcpmag.com/articles/2016/06/09/display-gui-message-boxes-in-powershell.aspx
 Add-Type -AssemblyName PresentationFramework
