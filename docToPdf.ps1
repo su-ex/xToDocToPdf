@@ -50,18 +50,37 @@ try {
     $progress.update("Bestimme Ersatzseiten")
     $replacements = $wpeh.getPdfReplacementPages()
     $replacements | Out-String | Write-Debug
+    # one group for each pdf file (more efficient --> faster)
+    $replacementGroups = $replacements | Group-Object -Property path
 
     $progress.update("Verstecke Platzhalter")
     $wpeh.hidePlaceholders()
+
+    $targetIsPortrait = $true
     
-    $progress.update("Exportiere als PDF")
+    $progress.update("Exportiere Word-Dokument als PDF")
     $wpeh.export($targetPdfFile)
     
+    $progress.update("Extrahiere PDF-Seitendimensionen und bestimme zu drehende Seiten")
+    $targetPagesToRotate = [System.Collections.ArrayList]@()
+    foreach ($rg in $replacementGroups) {
+        $pageDimensions = getPdfPageDimensions $rg.Name
+        foreach ($pd in $pageDimensions) {
+            if ($pd.isPortrait -ne $targetIsPortrait) {
+                $targetPagesToRotate.AddRange([int[]]($rg.Group | Where-Object { $_.pdfPageNumber -eq $pd.pageNumber } | Select-Object -ExpandProperty docPageNumber))
+            }
+        }
+    }
+
+    $progress.update("Drehe Seiten")
+    rotatePdfPages90Deg $targetPdfFile $targetPagesToRotate
+
     $progress.update("Überlagere Seiten")
-    overlayPdfPages $targetPdfFile $replacements
+    overlayPdfPages $targetPdfFile $replacementGroups
 
     $progress.success()
 } catch {
+    $_ | Out-String | Write-Error
     exitError "Export leider fehlgeschlagen: $($_.Exception.Message)"
 } finally {
     $wpeh.destroy()
