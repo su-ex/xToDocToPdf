@@ -2,18 +2,15 @@ $pdfMagic = "################################PDF################################
 $pdfFilePrefix = "Datei: "
 $pdfPagePrefix = "Seite "
 
-# see: https://stackoverflow.com/questions/53170039/powershell-unable-to-find-type-microsoft-office-interop-word-wdsaveformat
-$WdTypes = Add-Type -AssemblyName 'Microsoft.Office.Interop.Word' -PassThru
+$wdFindStop = 0
+$wdReplaceNone = 0
+$wdActiveEndPageNumber = 3
 
-$WdFindWrap = $wdTypes | Where-Object {$_.Name -eq "WdFindWrap"}
-$WdReplace  = $wdTypes | Where-Object {$_.Name -eq "WdReplace"}
-$WdInformation = $wdTypes | Where-Object {$_.Name -eq "WdInformation"}
-
-$WdExportFormat = $wdTypes | Where-Object {$_.Name -eq "WdExportFormat"}
-$WdExportOptimizeFor = $wdTypes | Where-Object {$_.Name -eq "WdExportOptimizeFor"}
-$WdExportRange = $wdTypes | Where-Object {$_.Name -eq "WdExportRange"}
-$WdExportItem = $wdTypes | Where-Object {$_.Name -eq "WdExportItem"}
-$WdExportCreateBookmarks = $wdTypes | Where-Object {$_.Name -eq "WdExportCreateBookmarks"}
+$wdExportFormatPDF = 17
+$wdExportOptimizeForPrint = 0
+$wdExportAllDocument = 0
+$wdExportDocumentContent = 0
+$wdExportCreateHeadingBookmarks = 1
 
 class WordPdfExportHelper {
     $Word = $Null
@@ -37,10 +34,10 @@ class WordPdfExportHelper {
         $MatchSoundsLike = $False
         $MatchAllWordForms = $False
         $Forward = $True
-        $Wrap = $Script:WdFindWrap::wdFindStop
+        $Wrap = $Script:wdFindStop
         $Format = $False
         $ReplaceWith = ""
-        $Replace = $Script:WdReplace::wdReplaceNone
+        $Replace = $Script:wdReplaceNone
 
         while ($objSelection.Find.Execute($FindText,$MatchCase,$MatchWholeWord,
         $MatchWildCards,$MatchSoundsLike,$MatchAllWordForms,$Forward,
@@ -48,7 +45,7 @@ class WordPdfExportHelper {
             $objSelection.Text -match "$($Script:pdfMagic)`v$($Script:pdfFilePrefix)(.*)`v$($Script:pdfPagePrefix)(.*)`v$($Script:pdfMagic)" | Out-Null
             $pdfReplacements.Add([PSCustomObject]@{
                 path = $matches[1]
-                docPageNumber = $objSelection.Information($Script:WdInformation::wdActiveEndPageNumber)
+                docPageNumber = $objSelection.Information($Script:wdActiveEndPageNumber)
                 pdfPageNumber = $matches[2]
             }) | Out-Null
         }
@@ -68,16 +65,16 @@ class WordPdfExportHelper {
         # taken from recorded Word macro and https://stackoverflow.com/questions/57502233/how-to-set-parameters-for-saveas-dialog-in-word-application
         $this.doc.ExportAsFixedFormat(
             $targetPdfFile,
-            $Script:WdExportFormat::wdExportFormatPDF,
+            $Script:wdExportFormatPDF,
             $false,
-            $Script:WdExportOptimizeFor::wdExportOptimizeForPrint,
-            $Script:WdExportRange::wdExportAllDocument,
+            $Script:wdExportOptimizeForPrint,
+            $Script:wdExportAllDocument,
             0,
             0,
-            $Script:WdExportItem::wdExportDocumentContent,
+            $Script:wdExportDocumentContent,
             $true,
             $true,
-            $Script:WdExportCreateBookmarks::wdExportCreateHeadingBookmarks,
+            $Script:wdExportCreateHeadingBookmarks,
             $true,
             $true,
             $false
