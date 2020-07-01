@@ -44,7 +44,7 @@ if (${target-pdf-file} -ne "") {
 $wpeh = WordPdfExportHelper $sourceWordFile
 
 $progress = ProgressHelper "Exportiere Word-Dokument als PDF ..."
-$progress.setTotalOperations(4)
+$progress.setTotalOperations(6)
 
 try {
     $progress.update("Bestimme Ersatzseiten")
