@@ -11,8 +11,12 @@ class WordAbstraction {
         $this.docm = $this.Word.Documents.Open($this.docmPath, $False, $True)
     }
 
+    [boolean] concatenate($path1, $path2, $addPageBreakInBetween) {
+        return $this.Word.Run("xToDoc.concatenate", "$path1", "$path2", $addPageBreakInBetween)
+    }
+
     [boolean] concatenate($path1, $path2) {
-        return $this.Word.Run("xToDoc.concatenate", "$path1", "$path2")
+        return $this.concatenate($path1, $path2, $false)
     }
 
     [boolean] concatenatePdfPage($path, $pdfFile, $pdfPageNumber, $pdfHeadings) {
