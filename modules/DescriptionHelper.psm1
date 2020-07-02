@@ -1,5 +1,5 @@
 [regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+(?<rawflags>((?<flags>[a-z0-9]*)>))?(?<path>[^:\*\?"<>\|]*)$'
-[regex]$flagsExtractionPattern = '^(?=.*a(?<alphabetical>r?))?(?=.*s(?<skiplang>))?(?=.*c(?<custombasepath>\d*))?(?=.*h(?<headingtier>[1-9r]?))?.*$'
+[regex]$flagsExtractionPattern = '^(?=.*a(?<alphabetical>r?))?(?=.*s(?<skiplang>))?(?=.*c(?<custombasepath>\d*))?(?=.*h(?<headingtier>[1-9r]?))?(?=.*p(?<pagebreak>(n|t)))?.*$'
 $insertionPlaceholder = '${disabled}${indent}${desc}: ${rawflags}${path}'
 
 [regex]$pdfFilenameInfoExtraction = '^(?=.*__(?<desc>.*)__)?(?=.*##(?<headingtier>[1-9r]?)##)?.*$'
@@ -28,7 +28,7 @@ Function getDescription($path) {
         # flag capture groups
         $f = $flagsExtractionPattern.Match($m.Groups['flags'].Value)
         # $f | Format-List | Out-String | Write-Debug
-        $alphabetical, $skipLang, $customBasePath, $headingTier = $f.Groups['alphabetical', 'skiplang', 'custombasepath', 'headingtier']
+        $alphabetical, $skipLang, $customBasePath, $headingTier, $pageBreak = $f.Groups['alphabetical', 'skiplang', 'custombasepath', 'headingtier', 'pagebreak']
 
         # check if indentaion is always ascending with one step at max
         if ($indent.Length - $lastIndent -gt 1) {
@@ -58,6 +58,9 @@ Function getDescription($path) {
             } else {
                 $flags["headingTier"] = $headingTier.Value
             }
+        }
+        If ($pageBreak.Success) {
+            $flags["pageBreakInBetween"] = $pageBreak.Value
         }
         if ($path.Value -eq "") {
             $flags["descOnly"] = $true

@@ -130,6 +130,10 @@ $progress = ProgressHelper "Generiere Word-Dokument ..."
 $progress.setTotalOperations($totalOperations)
 
 try {
+    $addPageBreakInBetweenNextIndent = $false
+    $addPageBreakInBetweenStartIndent = 0
+    $addPageBreakInBetweenFirstOnIndent = $true
+
     $pdfHeadings = [System.Collections.ArrayList]@()
     $pdfRecursiveHeading = $false
     $pdfRecursiveHeadingStartIndent = 0
@@ -176,6 +180,33 @@ try {
                 }
             }
 
+            # page break in between stuff
+            $addPageBreakInBetween = $false
+            if ($p.indent -le $addPageBreakInBetweenStartIndent) {
+                $addPageBreakInBetweenNextIndent = $false
+                $addPageBreakInBetweenFirstOnIndent = $true
+                Write-Host "preset"
+            }
+            if ($addPageBreakInBetweenStartIndent + 1 -eq $p.indent) {
+                if ($addPageBreakInBetweenFirstOnIndent) {
+                    $addPageBreakInBetweenFirstOnIndent = $false
+                    Write-Host "pfirstonindent"
+                } else {
+                    $addPageBreakInBetween = $addPageBreakInBetweenNextIndent
+                    Write-Host "pnotfirstonindent"
+                }
+            }
+            if ($p.flags.ContainsKey("pageBreakInBetween")) {
+                if ($p.flags.pageBreakInBetween -eq "t") {
+                    $addPageBreakInBetween = $true
+                    Write-Host "pt"
+                } elseif ($p.flags.pageBreakInBetween -eq "n") {
+                    $addPageBreakInBetweenNextIndent = $true
+                    $addPageBreakInBetweenStartIndent = $p.indent
+                    Write-Host "pn"
+                }
+            }
+
             # pdf heading stuff
             $pdfHeadingTier = "None"
             if ($p.indent -le $pdfRecursiveHeadingStartIndent) {
@@ -207,7 +238,7 @@ try {
             $extension = (Get-Item $p.path -ErrorAction Stop).Extension
 
             if ($wordExtensions.Contains($extension.ToLower())) {
-                if (-not $WA.concatenate($targetFile, $p.path)) { $progress.error() }
+                if (-not $WA.concatenate($targetFile, $p.path, $addPageBreakInBetween)) { $progress.error() }
             } elseif ($pdfExtensions.Contains($extension.ToLower())) {
                 $nPages = getPdfPageNumber($p.path)
                 Write-Debug "pdf page number: $nPages"
