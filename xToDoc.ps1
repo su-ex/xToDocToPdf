@@ -219,9 +219,11 @@ try {
             }
             if ($p.flags.ContainsKey("headingTier")) {
                 if ($p.flags.headingTier -eq "r") {
-                    $pdfRecursiveHeading = $true
-                    $pdfRecursiveHeadingStartIndent = $p.indent
-                    $pdfHeadingTier = $p.indent+1
+                    if (-not $pdfRecursiveHeading) {
+                        $pdfRecursiveHeading = $true
+                        $pdfRecursiveHeadingStartIndent = $p.indent
+                        $pdfHeadingTier = $p.indent+1
+                    }
                 } else {
                     $pdfHeadingTier = $p.flags.headingTier
                 }
