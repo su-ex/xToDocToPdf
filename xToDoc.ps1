@@ -130,9 +130,7 @@ $progress = ProgressHelper "Generiere Word-Dokument ..."
 $progress.setTotalOperations($totalOperations)
 
 try {
-    $addPageBreakInBetweenNextIndent = $false
-    $addPageBreakInBetweenStartIndent = 0
-    $addPageBreakInBetweenFirstOnIndent = $true
+    $addPageBreakInBetweenNextIndent = [System.Collections.Stack]@()
 
     $pdfHeadings = [System.Collections.ArrayList]@()
     $pdfRecursiveHeading = $false
@@ -168,7 +166,7 @@ try {
             $p = $pieces.Dequeue()
             $p | Format-List
             
-            # grab alphabetically sorted items from given folder if flag set
+            ### grab alphabetically sorted items from given folder if flag set
             if ($p.flags.ContainsKey("alphabetical")) {
                 if (-not (Get-Item $p.path) -is [System.IO.DirectoryInfo]) {
                     throw "$($p.path) ist kein Verzeichnis!"
@@ -180,34 +178,41 @@ try {
                 }
             }
 
-            # page break in between stuff
+            ### page break in between stuff
             $addPageBreakInBetween = $false
-            if ($p.indent -le $addPageBreakInBetweenStartIndent) {
-                $addPageBreakInBetweenNextIndent = $false
-                $addPageBreakInBetweenFirstOnIndent = $true
-                Write-Host "preset"
+
+            # pop addPageBreakInBetweenNextIndents from stack (loop because indent could jump down more than one)
+            while ($addPageBreakInBetweenNextIndent.Count -gt 0 -and $p.indent -le $addPageBreakInBetweenNextIndent.Peek().startIndent) {
+                $addPageBreakInBetweenNextIndent.Pop() | Out-Null
+                Write-Host "ppop"
             }
-            if ($addPageBreakInBetweenStartIndent + 1 -eq $p.indent) {
-                if ($addPageBreakInBetweenFirstOnIndent) {
-                    $addPageBreakInBetweenFirstOnIndent = $false
+
+            # only add page break in between --> not on first element on same index
+            if ($addPageBreakInBetweenNextIndent.Count -gt 0 -and $addPageBreakInBetweenNextIndent.Peek().startIndent + 1 -eq $p.indent) {
+                if ($addPageBreakInBetweenNextIndent.Peek().firstOnIndent) {
+                    $addPageBreakInBetweenNextIndent.Peek().firstOnIndent = $false
                     Write-Host "pfirstonindent"
                 } else {
-                    $addPageBreakInBetween = $addPageBreakInBetweenNextIndent
+                    $addPageBreakInBetween = $true
                     Write-Host "pnotfirstonindent"
                 }
             }
+
+            # add page break in between on next indent (pn) or add it before this element (pt)
             if ($p.flags.ContainsKey("pageBreakInBetween")) {
                 if ($p.flags.pageBreakInBetween -eq "t") {
                     $addPageBreakInBetween = $true
                     Write-Host "pt"
                 } elseif ($p.flags.pageBreakInBetween -eq "n") {
-                    $addPageBreakInBetweenNextIndent = $true
-                    $addPageBreakInBetweenStartIndent = $p.indent
-                    Write-Host "pn"
+                    $addPageBreakInBetweenNextIndent.Push(@{
+                        startIndent = $p.indent
+                        firstOnIndent = $true
+                    }) | Out-Null
+                    Write-Host "ppush"
                 }
             }
 
-            # pdf heading stuff
+            ### find out pdf heading tier and text
             $pdfHeadingTier = "None"
             if ($p.indent -le $pdfRecursiveHeadingStartIndent) {
                 $pdfRecursiveHeading = $false
