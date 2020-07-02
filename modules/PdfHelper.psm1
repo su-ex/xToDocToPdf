@@ -48,6 +48,7 @@ Function getPdfPageDimensions($file) {
 }
 
 Function rotatePdfPages90Deg($file, $pagesToRotate) {
+    if ($pagesToRotate.Count -eq 0) { return }
     $output = (& "$qpdfexe" --replace-input "$file" --rotate=+90:$($pagesToRotate -join ',') 2>&1)
     if ($LASTEXITCODE -ne 0) {
         throw "Calling qpdf failed:`n$output"
