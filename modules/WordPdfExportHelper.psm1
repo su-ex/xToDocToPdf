@@ -22,6 +22,16 @@ class WordPdfExportHelper {
         $this.doc = $this.Word.Documents.Open($sourceWordFile, $False, $True)
     }
 
+    [boolean] isPortrait() {
+        $width = $this.doc.PageSetup.PageWidth
+        $height = $this.doc.PageSetup.PageHeight
+
+        Write-Debug "Word document page dimesions: width: $width, height: $height"
+        $isPortrait = $width -lt $height
+
+        return $isPortrait
+    }
+
     [System.Collections.ArrayList] getPdfReplacementPages() {
         $pdfReplacements = [System.Collections.ArrayList]@()
 

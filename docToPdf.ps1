@@ -44,7 +44,7 @@ if (${target-pdf-file} -ne "") {
 $wpeh = WordPdfExportHelper $sourceWordFile
 
 $progress = ProgressHelper "Exportiere Word-Dokument als PDF ..."
-$progress.setTotalOperations(6)
+$progress.setTotalOperations(7)
 
 try {
     $progress.update("Bestimme Ersatzseiten")
@@ -53,10 +53,11 @@ try {
     # one group for each pdf file (more efficient --> faster)
     $replacementGroups = $replacements | Group-Object -Property path
 
+    $progress.update("Bestimme Word-Seitenorientierung")
+    $targetIsPortrait = $wpeh.isPortrait()
+
     $progress.update("Verstecke Platzhalter")
     $wpeh.hidePlaceholders()
-
-    $targetIsPortrait = $true
     
     $progress.update("Exportiere Word-Dokument als PDF")
     $wpeh.export($targetPdfFile)
