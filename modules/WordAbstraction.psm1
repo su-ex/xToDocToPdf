@@ -62,6 +62,10 @@ class WordAbstraction {
         return $this.Word.Run("xToDoc.updateFields", "$path")
     }
 
+    [boolean] applyFormatting($path) {
+        return $this.Word.Run("xToDoc.applyFormatting", "$path")
+    }
+
     [boolean] saveAndClose($path) {
         return $this.Word.Run("xToDoc.saveAndClose", "$path")
     }

@@ -115,7 +115,7 @@ $description | Select-Object -Property * -ExcludeProperty rawflags,asset | Forma
 setDescription $selectedDescriptionFile $description
 
 $description = ($description | Where-Object { $_.enabled })
-$totalOperations = 3
+$totalOperations = 5
 if ($replaceVariables) { $totalOperations++ }
 foreach ($d in $description) { $totalOperations++ }
 
@@ -291,6 +291,9 @@ try {
     
     $progress.update("Aktualisiere Felder")
     if (-not $WA.updateFields($targetFile)) { $progress.error() }
+    
+    $progress.update("Wende Formatierungsmakierungen an")
+    if (-not $WA.applyFormatting($targetFile)) { $progress.error() }
     
     $progress.update("Speichern und schließen")
     if (-not $WA.saveAndClose($targetFile)) { $progress.error() }
