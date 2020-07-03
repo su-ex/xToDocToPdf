@@ -1,8 +1,4 @@
 $qpdfexe = ((Get-ChildItem -Path "$PSScriptRoot\..\..\qpdf-**\" -Recurse | Where-Object { $_.Name -like "qpdf.exe" } | Sort-Object -Descending)[0]).FullName
-$gsexe = ((Get-ChildItem -Path "C:\Program Files\gs\" -Recurse | Where-Object { $_.Name -like "gs*c.exe" } | Sort-Object -Descending)[0]).FullName
-$gspdfinfo = ((Get-ChildItem -Path "C:\Program Files\gs\" -Recurse | Where-Object { $_.Name -like "pdf_info.ps" } | Sort-Object -Descending)[0]).FullName
-
-[regex]$pdfSizeExtractionPattern = '(?i)^(?=.*Page\s+(?<page>\d+))(?=.*MediaBox:\s+\[\d+\s+\d+\s+(?<width>\d+(\.\d+)?)\s+(?<height>\d+(\.\d+)?)\])(?=.*Rotate\s+=\s+(?<rotate>\d+))?.*$'
 
 Function getPdfPageNumber($file) {
     $output = (& "$qpdfexe" --show-npages "$file" 2>&1)
@@ -14,21 +10,22 @@ Function getPdfPageNumber($file) {
 }
 
 Function getPdfPageDimensions($file) {
-    $output = (& "$gsexe" -dQUIET -dNODISPLAY -dNOSAFER -q -sFile="$file" "$gspdfinfo" 2>&1)
+    $output = (& "$qpdfexe" "$file" --json 2>&1)
     if ($LASTEXITCODE -ne 0) {
-        throw "Calling Ghostscript failed:`n$output"
+        throw "Calling qpdf failed:`n$output"
     }
+
+    $pdfjson = $output | ConvertFrom-Json
 
     $pages = [System.Collections.ArrayList]@()
 
-    foreach ($line in [string[]]$output) {
-        $m = $pdfSizeExtractionPattern.match($line)
-        [int]$page, [int]$width, [int]$height, [int]$rotate = $m.Groups['page', 'width', 'height', 'rotate'].Value
+    for ($i = 0; $i -lt $pdfjson.pages.Count; $i++) {
+        $info = $pdfjson.objects.$($pdfjson.pages[$i].object)
 
-        # pattern not recognized
-        if (-not $m.Success) {
-            continue
-        }
+        [int]$width = $info.'/MediaBox'[2]
+        [int]$height = $info.'/MediaBox'[3]
+
+        [int]$rotate = $info.'/Rotate'
 
         $isPortrait = $width -lt $height
         if ([Math]::Abs(($rotate / 90) % 2) -eq 1) {
@@ -36,7 +33,7 @@ Function getPdfPageDimensions($file) {
         }
 
         $pages.Add([PSCustomObject]@{
-            pageNumber = $page
+            pageNumber = $i+1
             width = $width
             height = $height
             rotate = $rotate
