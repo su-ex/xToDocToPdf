@@ -9,9 +9,14 @@
     [String] $lang = "de",
     
     [Switch] ${get-variables-from-excel},
-    [String] ${excel-workbook-file},
-    [String] ${excel-worksheet-name},
-    [String] ${excel-table-name},
+    [String] ${excel-variables-workbook-file},
+    [String] ${excel-variables-worksheet-name},
+    [String] ${excel-variables-table-name},
+    
+    [Switch] ${get-translations-from-excel},
+    [String] ${excel-translations-workbook-file},
+    [String] ${excel-translations-worksheet-name},
+    [String] ${excel-translations-table-name},
 
     [String[]] ${custom-base-path} = @(".")
 )
@@ -76,20 +81,39 @@ if (Test-Path $selectedDescriptionFile) {
     exitError "Das Verzeichnis, in dem die Datei mit der getroffenen Auswahl gespeichert werden soll, existiert nicht!"
 }
 
-# replacement variables stuff
-$replaceVariables = [boolean]${get-variables-from-excel}
+# get replacement variables from Excel table
+$replaceVariables = ${get-variables-from-excel}.IsPresent
 if ($replaceVariables) {
     # base relative paths upon working directory
-    $excelWorkbookFile = makePathAbsolute $workingDirectory ${excel-workbook-file}
+    $excelWorkbookFile = makePathAbsolute $workingDirectory ${excel-variables-workbook-file}
     
     if (-not (Test-Path $excelWorkbookFile)) {
         exitError "Die Excel-Arbeitsmappe $excelWorkbookFile existiert nicht!"
     }
         
     try {
-        $Script:replacementVariables = Get-ExcelTable $excelWorkbookFile ${excel-table-name} ${excel-worksheet-name}
+        $Script:replacementVariables = Get-ExcelTable $excelWorkbookFile ${excel-variables-table-name} ${excel-variables-worksheet-name}
     } catch {
-        exitError "Beim Auslesen der Tabelle mit den Variablen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmt z. B. der Tabellenname???"
+        exitError "Beim Auslesen der Tabelle mit den Variablen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmen der Arbeitsblatt- und Tabellenname???"
+    }
+}
+
+# get translations from Excel table stuff
+$translationHeadings = @()
+$translationHeadingsInExcel = ${get-translations-from-excel}.IsPresent
+if ($translationHeadingsInExcel) {
+    # base relative paths upon working directory
+    $excelWorkbookFile = makePathAbsolute $workingDirectory ${excel-translations-workbook-file}
+    
+    if (-not (Test-Path $excelWorkbookFile)) {
+        exitError "Die Excel-Arbeitsmappe $excelWorkbookFile existiert nicht!"
+    }
+        
+    try {
+        $gottenTranslations = [string[][]](Get-ExcelTable $excelWorkbookFile ${excel-translations-table-name} ${excel-translations-worksheet-name} | ForEach-Object {@(, ($_.PSObject.Properties | ForEach-Object {$_.Value}))})
+        $translationHeadings += $gottenTranslations | ForEach-Object {,@(('^' + [regex]::Escape($_[0]) + '$'), $_[1])}
+    } catch {
+        exitError "Beim Auslesen der Tabelle mit den Übersetzungen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmen der Arbeitsblatt- und Tabellenname???"
     }
 }
 
@@ -235,7 +259,7 @@ try {
             if ($p.flags.ContainsKey("descOnly")) {
                 $pdfHeadings.Add(@{
                     pdfHeadingTier = $pdfHeadingTier
-                    pdfHeadingText = $p.desc
+                    pdfHeadingText = (replaceEachInString $p.desc $translationHeadings)
                 }) | Out-Null
 
                 continue
@@ -252,7 +276,7 @@ try {
                 for ($i = 1; $i -le $nPages; $i++) {
                     $pdfHeadings.Add(@{
                         pdfHeadingTier = $pdfHeadingTier
-                        pdfHeadingText = $p.desc
+                        pdfHeadingText = (replaceEachInString $p.desc $translationHeadings)
                     }) | Out-Null
                     if (-not $WA.concatenatePdfPage($targetFile, $p.path, $i, $pdfHeadings)) { $progress.error() }
                     $pdfHeadings.Clear()
