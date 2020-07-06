@@ -1,4 +1,4 @@
-class WordAbstraction {
+﻿class WordAbstraction {
     [String] $docmPath = "$PSScriptRoot\Makros.docm"
     [String] $templatePdfPage = "$PSScriptRoot\..\assets\PDF.docx"
 
@@ -43,7 +43,29 @@ class WordAbstraction {
     }
 
     [boolean] replaceVariable($path, $name, $value, $replaceAll, $startEnd) {
-        return $this.Word.Run("xToDoc.replace", "$path", "{{`$$name}}", "$value", $replaceAll, $startEnd)
+        $length = 255
+        if ($value.Length -gt $length) {
+            $variableCount = [Math]::Ceiling($value.Length/$length)
+            $restStringLength = $value.Length % $length
+
+            $replacementVariablesString = ""
+            for ($i = 0; $i -lt $variableCount; $i++) {
+                $replacementVariablesString += "{{`$$($name)_$($i)}}"
+            }
+            if (-not $this.replaceVariable($path, $name, $replacementVariablesString, $replaceAll, $startEnd)) { return $false }
+            if ($replacementVariablesString.Length -gt $length) {
+                throw "Der Variableninhalt von `$$name ist viel zu lang oder der Variablenname selbst ist viel zu lang!"
+            }
+
+            for  ($i = 0; $i -lt $variableCount-1; $i++) {
+                if (-not $this.replaceVariable($path, "$($name)_$($i)", $value.Substring($i * $length, $length), $replaceAll, $startEnd)) { return $false }
+            }
+            if (-not $this.replaceVariable($path, "$($name)_$($variableCount-1)", $value.Substring(($variableCount-1) * $length, $restStringLength), $replaceAll, $startEnd)) { return $false }
+
+            return $true
+        }
+
+        return $this.replace("$path", "{{`$$name}}", "$value", $replaceAll, $startEnd)
     }
 
     [boolean] replaceVariable($path, $name, $value) {
