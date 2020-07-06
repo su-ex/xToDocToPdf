@@ -1,8 +1,8 @@
 [regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+(?<rawflags>((?<flags>[a-z0-9]*)>))?(?<path>[^:\*\?"<>\|]*)$'
-[regex]$flagsExtractionPattern = '^(?=.*a(?<alphabetical>r?))?(?=.*s(?<skiplang>))?(?=.*c(?<custombasepath>\d*))?(?=.*h(?<headingtier>[1-9r]?))?(?=.*p(?<pagebreak>(n|t)))?.*$'
+[regex]$flagsExtractionPattern = '^(?=.*a(?<alphabetical>r?))?(?=.*s(?<skiplang>))?(?=.*c(?<custombasepath>\d*))?(?=.*h(?<headingtier>([1-9r]|None)?))?(?=.*p(?<pagebreak>(n|t)))?.*$'
 $insertionPlaceholder = '${disabled}${indent}${desc}: ${rawflags}${path}'
 
-[regex]$pdfFilenameInfoExtraction = '^(?=.*__(?<desc>.*)__)?(?=.*##(?<headingtier>[1-9r]?)##)?.*$'
+[regex]$pdfFilenameInfoExtraction = '^(?=.*__(?<desc>.*)__)?(?=.*##(?<headingtier>([1-9r]|None)?)##)?.*$'
 $pdfFilenameInfoReplace = @(@('##.*##', ''))
 
 Import-Module "$PSScriptRoot\HelperFunctions.psm1" -Force
