@@ -141,34 +141,34 @@ try {
         # Write-Debug "current to concatenate:"
         # $d | Format-List | Out-String | Write-Debug
 
-        # set template path (relative to description file if custom base path flag not set)
-        $basePath = Split-Path $templateDescriptionFile
-        if ($d.flags.ContainsKey("customBasePath")) {
-            if ($d.flags.customBasePath -lt 0 -or $d.flags.customBasePath -ge $customBasePaths.Count) {
-                throw "Kein $($d.flags.customBasePath + 1). benutzerdefinierter Basispfad als Parameter übergeben!"
-            }
-
-            $basePath = makePathAbsolute $workingDirectory $customBasePaths[$d.flags.customBasePath]
-        }
-
-        # append language folder if not skipped
-        if (-not $d.flags.ContainsKey("skipLang")) {
-            $basePath = Join-Path -Path $basePath -ChildPath $lang
-        }
-
-        # append path from description if it's relative otherwise use it directly
-        $d.path = makePathAbsolute $basePath $d.path
-
         $pieces = [System.Collections.Queue]@()
         $pieces.Enqueue($d) | Out-Null
         
         while ($pieces.Count -gt 0) {
             $p = $pieces.Dequeue()
             $p | Format-List
+
+            # set template path (relative to description file if custom base path flag not set)
+            $basePath = Split-Path $templateDescriptionFile
+            if ($p.flags.ContainsKey("customBasePath")) {
+                if ($p.flags.customBasePath -lt 0 -or $p.flags.customBasePath -ge $customBasePaths.Count) {
+                    throw "Kein $($p.flags.customBasePath + 1). benutzerdefinierter Basispfad als Parameter übergeben!"
+                }
+    
+                $basePath = makePathAbsolute $workingDirectory $customBasePaths[$p.flags.customBasePath]
+            }
+    
+            # append language folder if not skipped
+            if (-not $p.flags.ContainsKey("skipLang")) {
+                $basePath = Join-Path -Path $basePath -ChildPath $lang
+            }
+    
+            # append path from description if it's relative otherwise use it directly
+            $p.path = makePathAbsolute $basePath $p.path
             
             ### grab alphabetically sorted items from given folder if flag set
             if ($p.flags.ContainsKey("alphabetical")) {
-                if (-not (Get-Item $p.path) -is [System.IO.DirectoryInfo]) {
+                if (-not (Get-Item $p.path -ErrorAction Stop) -is [System.IO.DirectoryInfo]) {
                     throw "$($p.path) ist kein Verzeichnis!"
                 }
                 

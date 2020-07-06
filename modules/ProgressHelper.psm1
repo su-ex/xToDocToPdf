@@ -22,10 +22,10 @@ class ProgressHelper {
         ## -- Create The Progress-Bar
         $this.ObjForm = New-Object System.Windows.Forms.Form
         $this.ObjForm.Text = $this.activityName
-        $this.ObjForm.Height = 100
+        $this.ObjForm.Height = 110
         $this.ObjForm.Width = 500
 
-        $this.ObjForm.FormBorderStyle = 'FixedSingle'
+        $this.ObjForm.FormBorderStyle = 'FixedDialog'
         $this.ObjForm.StartPosition = 'CenterScreen'
 
         ## -- Create The Label
@@ -44,7 +44,7 @@ class ProgressHelper {
         $this.PB.Style="Continuous"
 
         $System_Drawing_Size = New-Object System.Drawing.Size
-        $System_Drawing_Size.Width = 500 - 40
+        $System_Drawing_Size.Width = 500 - 30
         $System_Drawing_Size.Height = 20
         $this.PB.Size = $System_Drawing_Size
         $this.PB.Left = 5
