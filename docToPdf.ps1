@@ -32,7 +32,7 @@ if (-not (Test-Path $sourceWordFile)) {
 
 # base target file upon working directory from 
 $targetPdfFile = makePathAbsolute $workingDirectory ([System.IO.Path]::ChangeExtension(${source-word-file}, "pdf"))
-if (-not $PSBoundParameters.ContainsKey('target-pdf-file') {
+if ($PSBoundParameters.ContainsKey('target-pdf-file')) {
     $targetPdfFile = makePathAbsolute $workingDirectory ${target-pdf-file}
 
     if (-not (Split-Path $targetPdfFile | Test-Path)) {
@@ -48,7 +48,7 @@ $progress.setTotalOperations(7)
 try {
     $progress.update("Bestimme Ersatzseiten")
     $replacements = $wpeh.getPdfReplacementPages()
-    $replacements | Out-String | Write-Debug
+    $replacements | Format-List | Out-String | Write-Debug
     # one group for each pdf file (more efficient --> faster)
     $replacementGroups = $replacements | Group-Object -Property path
 
