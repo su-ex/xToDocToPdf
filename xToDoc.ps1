@@ -18,6 +18,8 @@
     [String] ${excel-translations-worksheet-name},
     [String] ${excel-translations-table-name},
 
+    [String] ${custom-template-pdf-page},
+
     [String[]] ${custom-base-path} = @(".")
 )
 
@@ -153,6 +155,13 @@ Write-Debug "custom base paths:"
 $customBasePaths | Format-List | Out-String | Write-Debug
 
 $WA = WordAbstraction
+if ($PSBoundParameters.ContainsKey('custom-template-pdf-page')) {
+    $customTemplatePdfPage = makePathAbsolute $workingDirectory ${custom-template-pdf-page}
+    if (-not (Test-Path $customTemplatePdfPage)) {
+        exitError "Es wurde der Pfad zu einer benutzerdefinierten PDF-Vorlagenseite als Parameter übergeben, aber die Datei existiert nicht!"
+    }
+    $WA.templatePdfPage = ${custom-template-pdf-page}
+}
 
 $progress = ProgressHelper "Generiere Word-Dokument ..."
 $progress.setTotalOperations($totalOperations)
