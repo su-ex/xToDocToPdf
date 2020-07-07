@@ -277,6 +277,7 @@ try {
 
             if ($wordExtensions.Contains($extension.ToLower())) {
                 if (-not $WA.concatenate($targetFile, $p.path, $addPageBreakInBetween)) { $progress.error() }
+                $pdfHeadings.Clear()
             } elseif ($pdfExtensions.Contains($extension.ToLower())) {
                 $nPages = getPdfPageNumber($p.path)
                 Write-Debug "pdf page number: $nPages"
