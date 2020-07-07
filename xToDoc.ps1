@@ -39,6 +39,8 @@ Import-Module "$ScriptPath\modules\HelperFunctions.psm1" -Force
 $wordExtensions = @(".doc", ".dot", ".wbk", ".docx", ".docm", ".dotx", ".dotm", ".docb")
 $pdfExtensions = @(".pdf")
 
+$allExtensions = ($wordExtensions + $pdfExtensions)
+
 # make sure working directory exists and make path always absolute
 try {
     $Script:workingDirectory = Resolve-Path ${working-directory} -ErrorAction Stop
@@ -196,7 +198,7 @@ try {
                     throw "$($p.path) ist kein Verzeichnis!"
                 }
                 
-                $gottenFiles = (getDescribedFolder -Path $p.path -Recurse:($p.flags.alphabetical) -Extensions ($wordExtensions + $pdfExtensions) -Indent ($p.indent + 1))
+                $gottenFiles = (getDescribedFolder -Path $p.path -Recurse:($p.flags.alphabetical) -Extensions $allExtensions -Indent ($p.indent + 1))
                 foreach ($s in $gottenFiles) {
                     $pieces.Enqueue($s) | Out-Null
                 }
@@ -293,7 +295,7 @@ try {
                     $pdfHeadingTier = "None"
                 }
             } else {
-                throw "Dateityp nicht unterstützt!"
+                throw "Der Dateityp der Datei $($p.path) ist nicht unterstützt!"
             }
         }
     }
