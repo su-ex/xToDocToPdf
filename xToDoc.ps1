@@ -1,12 +1,12 @@
 ﻿Param (
-    [String] ${working-directory} = "X:\Projekte\2020\PR-2000158_IMB Stromversorgungssysteme GmbH_Test Bedienhandbuch\TestBedienhandbuch",
+    [String] ${working-directory},
     
-    [String] ${target-file} = ".\Ziel.docx",
-    [String] ${selected-description-file} = ".\Auswahl.desc",
+    [String] ${target-file} = ".\target.docx",
+    [String] ${selected-description-file} = ".\target.desc",
 
-    [String] ${template-description-file} = "X:\Vorlagen\Bedienhandbuch\Vorlage.desc",
+    [String] ${template-description-file},
 
-    [String] $lang = "de",
+    [String] $lang,
     
     [Switch] ${get-variables-from-excel},
     [String] ${excel-variables-workbook-file},
@@ -21,25 +21,27 @@
     [String[]] ${custom-base-path} = @(".")
 )
 
-if ($MyInvocation.MyCommand.CommandType -eq "ExternalScript") {
-    $Script:ScriptPath = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
-} else {
-    $Script:ScriptPath = Split-Path -Parent -Path ([Environment]::GetCommandLineArgs()[0]) 
-    if (!$ScriptPath) { $Script:ScriptPath = "." }
-}
-
-Import-Module "$ScriptPath\modules\WordAbstraction.psm1" -Force
-Import-Module "$ScriptPath\modules\DescriptionHelper.psm1" -Force
-Import-Module "$ScriptPath\modules\TreeDialogue.psm1" -Force
-Import-Module "$ScriptPath\modules\ProgressHelper.psm1" -Force
-Import-Module "$ScriptPath\modules\ExcelHelper.psm1" -Force
-Import-Module "$ScriptPath\modules\PdfHelper.psm1" -Force
-Import-Module "$ScriptPath\modules\HelperFunctions.psm1" -Force
+Import-Module "$PSScriptRoot\modules\WordAbstraction.psm1" -Force
+Import-Module "$PSScriptRoot\modules\DescriptionHelper.psm1" -Force
+Import-Module "$PSScriptRoot\modules\TreeDialogue.psm1" -Force
+Import-Module "$PSScriptRoot\modules\ProgressHelper.psm1" -Force
+Import-Module "$PSScriptRoot\modules\ExcelHelper.psm1" -Force
+Import-Module "$PSScriptRoot\modules\PdfHelper.psm1" -Force
+Import-Module "$PSScriptRoot\modules\HelperFunctions.psm1" -Force
 
 $wordExtensions = @(".doc", ".dot", ".wbk", ".docx", ".docm", ".dotx", ".dotm", ".docb")
 $pdfExtensions = @(".pdf")
 
 $allExtensions = ($wordExtensions + $pdfExtensions)
+
+# enforce working-directory and template-description-file to be passed as parameter
+$PSBoundParameters.Keys
+if (-not $PSBoundParameters.ContainsKey('working-directory')) {
+    exitError "Ein Arbeitsverzeichnis muss als Parameter übergeben werden!"
+}
+if (-not $PSBoundParameters.ContainsKey('template-description-file')) {
+    exitError "Eine Vorlagenbeschreibungsdatei muss als Parameter übergeben werden!"
+}
 
 # make sure working directory exists and make path always absolute
 try {
@@ -185,7 +187,7 @@ try {
             }
     
             # append language folder if not skipped
-            if (-not $p.flags.ContainsKey("skipLang")) {
+            if (-not $p.flags.ContainsKey("skipLang") -and $PSBoundParameters.ContainsKey('lang')) {
                 $basePath = Join-Path -Path $basePath -ChildPath $lang
             }
     

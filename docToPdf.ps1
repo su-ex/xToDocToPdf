@@ -1,22 +1,21 @@
 ﻿Param (
-    [String] ${working-directory} = "X:\Projekte\2020\PR-2000158_IMB Stromversorgungssysteme GmbH_Test Bedienhandbuch\TestBedienhandbuch",
+    [String] ${working-directory},
     
-    [String] ${source-word-file} = ".\Ziel.docx",
-    [String] ${target-pdf-file} = ""
+    [String] ${source-word-file} = ".\target.docx",
+    [String] ${target-pdf-file}
 )
 
-if ($MyInvocation.MyCommand.CommandType -eq "ExternalScript") {
-    $Script:ScriptPath = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
-} else {
-    $Script:ScriptPath = Split-Path -Parent -Path ([Environment]::GetCommandLineArgs()[0]) 
-    if (!$ScriptPath) { $Script:ScriptPath = "." }
-}
+Import-Module "$PSScriptRoot\modules\WordAbstraction.psm1" -Force
+Import-Module "$PSScriptRoot\modules\ProgressHelper.psm1" -Force
+Import-Module "$PSScriptRoot\modules\PdfHelper.psm1" -Force
+Import-Module "$PSScriptRoot\modules\WordPdfExportHelper.psm1" -Force
+Import-Module "$PSScriptRoot\modules\HelperFunctions.psm1" -Force
 
-Import-Module "$ScriptPath\modules\WordAbstraction.psm1" -Force
-Import-Module "$ScriptPath\modules\ProgressHelper.psm1" -Force
-Import-Module "$ScriptPath\modules\PdfHelper.psm1" -Force
-Import-Module "$ScriptPath\modules\WordPdfExportHelper.psm1" -Force
-Import-Module "$ScriptPath\modules\HelperFunctions.psm1" -Force
+# enforce working-directory to be passed as parameter
+$PSBoundParameters.Keys
+if (-not $PSBoundParameters.ContainsKey('working-directory')) {
+    exitError "Ein Arbeitsverzeichnis muss als Parameter übergeben werden!"
+}
 
 # make sure working directory exists and make path always absolute
 try {
@@ -33,7 +32,7 @@ if (-not (Test-Path $sourceWordFile)) {
 
 # base target file upon working directory from 
 $targetPdfFile = makePathAbsolute $workingDirectory ([System.IO.Path]::ChangeExtension(${source-word-file}, "pdf"))
-if (${target-pdf-file} -ne "") {
+if (-not $PSBoundParameters.ContainsKey('target-pdf-file') {
     $targetPdfFile = makePathAbsolute $workingDirectory ${target-pdf-file}
 
     if (-not (Split-Path $targetPdfFile | Test-Path)) {
