@@ -244,6 +244,7 @@ try {
 
             # find out pdf heading tier and text
             $pdfHeadingTier = "None"
+            $pdfHeadingText = (replaceEachInString $p.desc $translationHeadings)
             if ($p.indent -le $pdfRecursiveHeadingStartIndent) {
                 $pdfRecursiveHeading = $false
             }
@@ -265,7 +266,7 @@ try {
             if ($p.flags.ContainsKey("descOnly")) {
                 $pdfHeadings.Add(@{
                     pdfHeadingTier = $pdfHeadingTier
-                    pdfHeadingText = (replaceEachInString $p.desc $translationHeadings)
+                    pdfHeadingText = $pdfHeadingText
                     onIndent = $p.indent
                 }) | Out-Null
 
@@ -284,7 +285,7 @@ try {
                 for ($i = 1; $i -le $nPages; $i++) {
                     $pdfHeadings.Add(@{
                         pdfHeadingTier = $pdfHeadingTier
-                        pdfHeadingText = (replaceEachInString $p.desc $translationHeadings)
+                        pdfHeadingText = $pdfHeadingText
                         onIndent = $p.indent
                     }) | Out-Null
                     if (-not $WA.concatenatePdfPage($targetFile, $p.path, $i, $pdfHeadings)) { $progress.error() }
