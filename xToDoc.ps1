@@ -92,7 +92,7 @@ if ($replaceVariables) {
     }
         
     try {
-        $Script:replacementVariables = Get-ExcelTable $excelWorkbookFile ${excel-variables-table-name} ${excel-variables-worksheet-name}
+        $Script:replacementVariables = [string[][]](Get-ExcelTable $excelWorkbookFile ${excel-variables-table-name} ${excel-variables-worksheet-name} | ForEach-Object {@(, ($_.PSObject.Properties | ForEach-Object {$_.Value}))})
     } catch {
         exitError "Beim Auslesen der Tabelle mit den Variablen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmen der Arbeitsblatt- und Tabellenname???"
     }
@@ -302,21 +302,10 @@ try {
         $progress.update("Variablen ersetzen")
         
         foreach ($variable in $replacementVariables) {
-            $name = $variable.Variable
-
-            # split lines and later join them with a vertical tab (Word's new line in same paragraph: Shift+Enter)
-            $replacementLines = $variable.Wert -split "`r?`n"
-
-            # get flags from Excel to apply special behaviour on some variables:
-            #   "t" to append a horizontal tab before each line in a variable
-            $flags = [char[]]$variable.Flags
-            foreach ($flag in $flags) {
-                if ($flag -eq 't') {
-                    $replacementLines = $replacementLines | ForEach-Object { "`t" + $_ }
-                }
-            }
+            $name = $variable[0]
+            $value = $variable[1]
             
-            if (-not $WA.replaceVariable($targetFile, $name, $replacementLines -join "`v")) { $progress.error() }
+            if (-not $WA.replaceVariable($targetFile, $name, $value)) { $progress.error() }
         }
     }
 
