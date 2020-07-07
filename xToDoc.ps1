@@ -56,6 +56,53 @@ try {
 $targetFile = makePathAbsolute $workingDirectory ${target-file}
 $selectedDescriptionFile = makePathAbsolute $workingDirectory ${selected-description-file}
 
+# get replacement variables from Excel table
+$replaceVariables = ${get-variables-from-excel}.IsPresent
+if ($replaceVariables) {
+    # base relative paths upon working directory
+    $excelWorkbookFile = makePathAbsolute $workingDirectory ${excel-variables-workbook-file}
+    
+    if (-not (Test-Path $excelWorkbookFile)) {
+        exitError "Die Excel-Arbeitsmappe $excelWorkbookFile existiert nicht!"
+    }
+        
+    try {
+        $Script:replacementVariables = [string[][]](Get-ExcelTable $excelWorkbookFile ${excel-variables-table-name} ${excel-variables-worksheet-name} | ForEach-Object {@(, ($_.PSObject.Properties | ForEach-Object {$_.Value}))})
+    } catch {
+        exitError "Beim Auslesen der Tabelle mit den Variablen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmen der Arbeitsmappen-, Arbeitsblatt- und Tabellenname???"
+    }
+}
+
+# get translations from Excel table stuff
+$translationHeadings = @()
+$translationHeadingsInExcel = ${get-translations-from-excel}.IsPresent
+if ($translationHeadingsInExcel) {
+    # base relative paths upon working directory
+    $excelWorkbookFile = makePathAbsolute $workingDirectory ${excel-translations-workbook-file}
+    
+    if (-not (Test-Path $excelWorkbookFile)) {
+        exitError "Die Excel-Arbeitsmappe $excelWorkbookFile existiert nicht!"
+    }
+        
+    try {
+        $gottenTranslations = [string[][]](Get-ExcelTable $excelWorkbookFile ${excel-translations-table-name} ${excel-translations-worksheet-name} | ForEach-Object {@(, ($_.PSObject.Properties | ForEach-Object {$_.Value}))})
+        $translationHeadings += $gottenTranslations | ForEach-Object {,@(('^' + [regex]::Escape($_[0]) + '$'), $_[1])}
+    } catch {
+        exitError "Beim Auslesen der Tabelle mit den Übersetzungen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmen der Arbeitsmappen-, Arbeitsblatt- und Tabellenname???"
+    }
+}
+
+# check if custom template pdf page can be used if given as parameter
+if ($PSBoundParameters.ContainsKey('custom-template-pdf-page')) {
+    $Script:customTemplatePdfPage = makePathAbsolute $workingDirectory ${custom-template-pdf-page}
+    try {
+        $extension = (Get-Item $customTemplatePdfPage -ErrorAction Stop).Extension
+        if (-not $wordExtensions.Contains($extension.ToLower())) { throw }
+    } catch {
+        exitError "Es wurde der Pfad zu einer benutzerdefinierten PDF-Vorlagenseite als Parameter übergeben, aber die Datei existiert nicht oder ist keine Word-Datei!"
+    }
+}
+
 # ask if existing target document should be deleted or check if its base path exists
 try {
     if (Test-Path $targetFile) {
@@ -85,42 +132,6 @@ if (Test-Path $selectedDescriptionFile) {
     }
 } elseif (-not (Split-Path $selectedDescriptionFile | Test-Path)) {
     exitError "Das Verzeichnis, in dem die Datei mit der getroffenen Auswahl gespeichert werden soll, existiert nicht!"
-}
-
-# get replacement variables from Excel table
-$replaceVariables = ${get-variables-from-excel}.IsPresent
-if ($replaceVariables) {
-    # base relative paths upon working directory
-    $excelWorkbookFile = makePathAbsolute $workingDirectory ${excel-variables-workbook-file}
-    
-    if (-not (Test-Path $excelWorkbookFile)) {
-        exitError "Die Excel-Arbeitsmappe $excelWorkbookFile existiert nicht!"
-    }
-        
-    try {
-        $Script:replacementVariables = [string[][]](Get-ExcelTable $excelWorkbookFile ${excel-variables-table-name} ${excel-variables-worksheet-name} | ForEach-Object {@(, ($_.PSObject.Properties | ForEach-Object {$_.Value}))})
-    } catch {
-        exitError "Beim Auslesen der Tabelle mit den Variablen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmen der Arbeitsblatt- und Tabellenname???"
-    }
-}
-
-# get translations from Excel table stuff
-$translationHeadings = @()
-$translationHeadingsInExcel = ${get-translations-from-excel}.IsPresent
-if ($translationHeadingsInExcel) {
-    # base relative paths upon working directory
-    $excelWorkbookFile = makePathAbsolute $workingDirectory ${excel-translations-workbook-file}
-    
-    if (-not (Test-Path $excelWorkbookFile)) {
-        exitError "Die Excel-Arbeitsmappe $excelWorkbookFile existiert nicht!"
-    }
-        
-    try {
-        $gottenTranslations = [string[][]](Get-ExcelTable $excelWorkbookFile ${excel-translations-table-name} ${excel-translations-worksheet-name} | ForEach-Object {@(, ($_.PSObject.Properties | ForEach-Object {$_.Value}))})
-        $translationHeadings += $gottenTranslations | ForEach-Object {,@(('^' + [regex]::Escape($_[0]) + '$'), $_[1])}
-    } catch {
-        exitError "Beim Auslesen der Tabelle mit den Übersetzungen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmen der Arbeitsblatt- und Tabellenname???"
-    }
 }
 
 # extract description from file
@@ -156,11 +167,7 @@ $customBasePaths | Format-List | Out-String | Write-Debug
 
 $WA = WordAbstraction
 if ($PSBoundParameters.ContainsKey('custom-template-pdf-page')) {
-    $customTemplatePdfPage = makePathAbsolute $workingDirectory ${custom-template-pdf-page}
-    if (-not (Test-Path $customTemplatePdfPage)) {
-        exitError "Es wurde der Pfad zu einer benutzerdefinierten PDF-Vorlagenseite als Parameter übergeben, aber die Datei existiert nicht!"
-    }
-    $WA.templatePdfPage = ${custom-template-pdf-page}
+    $WA.templatePdfPage = $customTemplatePdfPage
 }
 
 $progress = ProgressHelper "Generiere Word-Dokument ..."
