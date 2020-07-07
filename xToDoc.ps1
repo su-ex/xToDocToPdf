@@ -37,7 +37,6 @@ $pdfExtensions = @(".pdf")
 $allExtensions = ($wordExtensions + $pdfExtensions)
 
 # enforce working-directory and template-description-file to be passed as parameter
-$PSBoundParameters.Keys
 if (-not $PSBoundParameters.ContainsKey('working-directory')) {
     exitError "Ein Arbeitsverzeichnis muss als Parameter übergeben werden!"
 }
@@ -182,8 +181,6 @@ try {
 
     foreach ($d in $description) {
         $progress.update("Hänge $($d.desc) an")
-        # Write-Debug "current to concatenate:"
-        # $d | Format-List | Out-String | Write-Debug
 
         $pieces = [System.Collections.Queue]@()
         $pieces.Enqueue($d) | Out-Null
@@ -228,17 +225,14 @@ try {
             # pop addPageBreakInBetweenNextIndents from stack (loop because indent could jump down more than one)
             while ($addPageBreakInBetweenNextIndent.Count -gt 0 -and $p.indent -le $addPageBreakInBetweenNextIndent.Peek().startIndent) {
                 $addPageBreakInBetweenNextIndent.Pop() | Out-Null
-                Write-Host "ppop"
             }
 
             # only add page break in between --> not on first element on same index
             if ($addPageBreakInBetweenNextIndent.Count -gt 0 -and $addPageBreakInBetweenNextIndent.Peek().startIndent + 1 -eq $p.indent) {
                 if ($addPageBreakInBetweenNextIndent.Peek().firstOnIndent) {
                     $addPageBreakInBetweenNextIndent.Peek().firstOnIndent = $false
-                    Write-Host "pfirstonindent"
                 } else {
                     $addPageBreakInBetween = $true
-                    Write-Host "pnotfirstonindent"
                 }
             }
 
@@ -246,13 +240,11 @@ try {
             if ($p.flags.ContainsKey("pageBreakInBetween")) {
                 if ($p.flags.pageBreakInBetween -eq "t") {
                     $addPageBreakInBetween = $true
-                    Write-Host "pt"
                 } elseif ($p.flags.pageBreakInBetween -eq "n") {
                     $addPageBreakInBetweenNextIndent.Push(@{
                         startIndent = $p.indent
                         firstOnIndent = $true
                     }) | Out-Null
-                    Write-Host "ppush"
                 }
             }
 

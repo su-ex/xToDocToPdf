@@ -12,7 +12,6 @@ Import-Module "$PSScriptRoot\modules\WordPdfExportHelper.psm1" -Force
 Import-Module "$PSScriptRoot\modules\HelperFunctions.psm1" -Force
 
 # enforce working-directory to be passed as parameter
-$PSBoundParameters.Keys
 if (-not $PSBoundParameters.ContainsKey('working-directory')) {
     exitError "Ein Arbeitsverzeichnis muss als Parameter übergeben werden!"
 }
