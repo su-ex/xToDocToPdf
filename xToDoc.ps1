@@ -244,9 +244,8 @@ try {
                 $pdfHeadings.RemoveAt($pdfHeadings.Count-1) | Out-Null
             }
 
-            # find out pdf heading tier and text
+            # find out pdf heading tier
             $pdfHeadingTier = "None"
-            $pdfHeadingText = (replaceEachInString $p.desc $translationHeadings)
             if ($p.indent -le $pdfRecursiveHeadingStartIndent) {
                 $pdfRecursiveHeading = $false
             }
@@ -263,8 +262,17 @@ try {
             } elseif ($pdfRecursiveHeading) {
                 $pdfHeadingTier = $p.indent+1
             }
+
+            # find out pdf heading text
+            $pdfHeadingText = $p.desc
+            foreach ($translation in $translationHeadings) {
+                if ($pdfHeadingText -match $translation[0]) {
+                    $pdfHeadingText = $pdfHeadingText -replace $translation
+                    break
+                }
+            }
             
-            # if set only description, nothing to concatenate
+            ### if set only description, nothing to concatenate
             if ($p.flags.ContainsKey("descOnly")) {
                 $pdfHeadings.Add(@{
                     pdfHeadingTier = $pdfHeadingTier
