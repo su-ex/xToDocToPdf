@@ -173,6 +173,8 @@ $progress = ProgressHelper "Generiere Word-Dokument ..."
 $progress.setTotalOperations($totalOperations)
 
 try {
+    $customBasePathRecursion = [System.Collections.Stack]@()
+
     $addPageBreakInBetweenNextIndent = [System.Collections.Stack]@()
 
     $pdfHeadings = [System.Collections.ArrayList]@()
@@ -189,6 +191,12 @@ try {
             $p = $pieces.Dequeue()
             $p | Format-List
 
+            ### custom base path stuff
+            # pop customBasePathRecursions from stack (loop because indent could jump down more than one)
+            while ($customBasePathRecursion.Count -gt 0 -and $p.indent -le $customBasePathRecursion.Peek().startIndent) {
+                $customBasePathRecursion.Pop() | Out-Null
+            }
+
             # set template path (relative to description file if custom base path flag not set)
             $basePath = Split-Path $templateDescriptionFile
             if ($p.flags.ContainsKey("customBasePath")) {
@@ -197,6 +205,16 @@ try {
                 }
     
                 $basePath = makePathAbsolute $workingDirectory $customBasePaths[$p.flags.customBasePath]
+
+                # check if it should recurse and add to stack
+                if ($p.flags.ContainsKey("customBasePathRecursion")) {
+                    $customBasePathRecursion.Push(@{
+                        basePath = $basePath
+                        startIndent = $p.indent
+                    }) | Out-Null
+                }
+            } elseif ($customBasePathRecursion.Count -gt 0) {
+                $basePath = $customBasePathRecursion.Peek().basePath
             }
     
             # append language folder if not skipped
@@ -292,6 +310,8 @@ try {
 
                 continue
             }
+
+            ### concatenation stuff
 
             # check if file exists while retrieving file type
             $extension = (Get-Item $p.path -ErrorAction Stop).Extension
