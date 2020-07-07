@@ -236,7 +236,13 @@ try {
                 }
             }
 
-            ### find out pdf heading tier and text
+            ### pdf heading stuff
+            # clear headings from empty folders
+            while ($pdfHeadings.Count -gt 0 -and $p.indent -le $pdfHeadings[$pdfHeadings.Count-1].onIndent) {
+                $pdfHeadings.RemoveAt($pdfHeadings.Count-1) | Out-Null
+            }
+
+            # find out pdf heading tier and text
             $pdfHeadingTier = "None"
             if ($p.indent -le $pdfRecursiveHeadingStartIndent) {
                 $pdfRecursiveHeading = $false
@@ -260,6 +266,7 @@ try {
                 $pdfHeadings.Add(@{
                     pdfHeadingTier = $pdfHeadingTier
                     pdfHeadingText = (replaceEachInString $p.desc $translationHeadings)
+                    onIndent = $p.indent
                 }) | Out-Null
 
                 continue
@@ -277,6 +284,7 @@ try {
                     $pdfHeadings.Add(@{
                         pdfHeadingTier = $pdfHeadingTier
                         pdfHeadingText = (replaceEachInString $p.desc $translationHeadings)
+                        onIndent = $p.indent
                     }) | Out-Null
                     if (-not $WA.concatenatePdfPage($targetFile, $p.path, $i, $pdfHeadings)) { $progress.error() }
                     $pdfHeadings.Clear()
