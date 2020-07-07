@@ -20,6 +20,9 @@ class WordPdfExportHelper {
         $this.Word = New-Object -ComObject Word.Application
         $this.Word.Visible = $False
         $this.doc = $this.Word.Documents.Open($sourceWordFile, $False, $True)
+
+        # see: https://www.mrexcel.com/board/threads/selection-find-execute-does-not-work-for-read-only-mode.985285/
+        $this.doc.ActiveWindow.View.ReadingLayout = $False
     }
 
     [boolean] isPortrait() {
