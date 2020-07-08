@@ -341,8 +341,10 @@ try {
         $progress.update("Variablen ersetzen")
         
         foreach ($variable in $replacementVariables) {
-            $name = $variable[0]
-            $value = $variable[1]
+            [string]$name = $variable[0]
+            [string]$value = $variable[1]
+
+            if ($name -eq "") { continue }
             
             if (-not $WA.replaceVariable($targetFile, $name, $value)) { $progress.error() }
         }
