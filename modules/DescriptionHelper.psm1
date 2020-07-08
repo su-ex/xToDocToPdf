@@ -13,6 +13,10 @@ Function getDescription($path) {
     $i = 1
     $lastIndent = 0
     foreach($line in [System.IO.File]::ReadAllLines($path)) {
+        if ($line -eq "" -or $line[0] -eq "#") {
+            $i += 1
+            continue
+        }
         $m = $extractionPattern.match($line)
         Write-Debug "line: $line"
         # $m | Format-List | Out-String | Write-Debug
