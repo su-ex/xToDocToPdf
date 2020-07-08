@@ -1,5 +1,5 @@
 [regex]$extractionPattern = '^(?<disabled>;?)(?<indent>\t*)(?<desc>.+):\s+(?<rawflags>((?<flags>[a-zA-Z0-9]*)>))?(?<path>[^:\*\?"<>\|]*)$'
-[regex]$flagsExtractionPattern = '^(?=.*a(?<alphabetical>r?))?(?=.*s(?<skiplang>))?(?=.*c(?<custombasepath>\d*)(?<custombasepathrecursion>r)?)?(?=.*h(?<headingtier>([1-9r]|None)?))?(?=.*p(?<pagebreak>(n|t)))?.*$'
+[regex]$flagsExtractionPattern = '^(?=.*a(?<alphabetical>(r|k|rk|kr)?))?(?=.*s(?<skiplang>))?(?=.*c(?<custombasepath>\d*)(?<custombasepathrecursion>r)?)?(?=.*h(?<headingtier>([1-9r]|None)?))?(?=.*p(?<pagebreak>(n|t)))?.*$'
 $insertionPlaceholder = '${disabled}${indent}${desc}: ${rawflags}${path}'
 
 [regex]$pdfFilenameInfoExtraction = '^(?=.*__(?<desc>.*)__)?(?=.*##(?<headingtier>([1-9r]|None)?)##)?.*$'
@@ -39,8 +39,16 @@ Function getDescription($path) {
         #interpret flags
         $flags = @{}
         If ($alphabetical.Success) {
-            $flags["alphabetical"] = $alphabetical.Value -eq 'r'
+            $flags["alphabetical"] = $true
             $flags["descOnly"] = $true
+
+            if ($alphabetical.Value -match 'r') {
+                $flags["alphabeticalRecursion"] = $true
+            }
+
+            if ($alphabetical.Value -match 'k') {
+                $flags["alphabeticalKeepIndent"] = $true
+            }
         }
         If ($skipLang.Success) {
             $flags["skipLang"] = $Null

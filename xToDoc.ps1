@@ -231,7 +231,7 @@ try {
                     throw "$($p.path) ist kein Verzeichnis!"
                 }
                 
-                $gottenFiles = (getDescribedFolder -Path $p.path -Recurse:($p.flags.alphabetical) -Extensions $allExtensions -Indent ($p.indent + 1))
+                $gottenFiles = (getDescribedFolder -Path $p.path -Recurse:($p.flags.ContainsKey("alphabeticalRecursion")) -Extensions $allExtensions -Indent ($p.indent + (IIf $p.flags.ContainsKey("alphabeticalKeepIndent") 0 1)))
                 foreach ($s in $gottenFiles) {
                     $pieces.Enqueue($s) | Out-Null
                 }
@@ -243,15 +243,6 @@ try {
             # pop addPageBreakInBetweenNextIndents from stack (loop because indent could jump down more than one)
             while ($addPageBreakInBetweenNextIndent.Count -gt 0 -and $p.indent -le $addPageBreakInBetweenNextIndent.Peek().startIndent) {
                 $addPageBreakInBetweenNextIndent.Pop() | Out-Null
-            }
-
-            # only add page break in between --> not on first element on same index
-            if ($addPageBreakInBetweenNextIndent.Count -gt 0 -and $addPageBreakInBetweenNextIndent.Peek().startIndent + 1 -eq $p.indent) {
-                if ($addPageBreakInBetweenNextIndent.Peek().firstOnIndent) {
-                    $addPageBreakInBetweenNextIndent.Peek().firstOnIndent = $false
-                } else {
-                    $addPageBreakInBetween = $true
-                }
             }
 
             # add page break in between on next indent (pn) or add it before this element (pt)
@@ -317,6 +308,14 @@ try {
             $extension = (Get-Item $p.path -ErrorAction Stop).Extension
 
             if ($wordExtensions.Contains($extension.ToLower())) {
+                # only add page break in between --> not on first element on same indentation
+                if ($addPageBreakInBetweenNextIndent.Count -gt 0 -and $addPageBreakInBetweenNextIndent.Peek().startIndent + 1 -eq $p.indent) {
+                    if ($addPageBreakInBetweenNextIndent.Peek().firstOnIndent) {
+                        $addPageBreakInBetweenNextIndent.Peek().firstOnIndent = $false
+                    } else {
+                        $addPageBreakInBetween = $true
+                    }
+                }
                 if (-not $WA.concatenate($targetFile, $p.path, $addPageBreakInBetween)) { $progress.error() }
                 $pdfHeadings.Clear()
             } elseif ($pdfExtensions.Contains($extension.ToLower())) {
