@@ -20,7 +20,7 @@ function showTree($description) {
     }
 
     $window = New-Object System.Windows.Forms.Form
-    $window.ClientSize = [System.Drawing.Size]::new(342, 502)
+    $window.ClientSize = [System.Drawing.Size]::new(542, 802)
     $window.FormBorderStyle = 'FixedDialog'
     $window.StartPosition = "CenterScreen"
     $window.Text = "Auswahl treffen"
@@ -69,7 +69,7 @@ function showTree($description) {
 
     $ButtonOK = New-Object System.Windows.Forms.Button
     $ButtonOK.DialogResult = 'OK'
-    $ButtonOK.Location = [System.Drawing.Point]::new(245, 467)
+    $ButtonOK.Location = [System.Drawing.Point]::new(445, 767)
     $ButtonOK.Size = [System.Drawing.Size]::new(75, 23)
     $ButtonOK.Name = 'ButtonOK'
     $ButtonOK.Text = 'OK'
