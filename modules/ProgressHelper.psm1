@@ -27,6 +27,7 @@ class ProgressHelper {
 
         $this.ObjForm.FormBorderStyle = 'FixedDialog'
         $this.ObjForm.StartPosition = 'CenterScreen'
+        $this.ObjForm.ControlBox = $false
 
         ## -- Create The Label
         $this.ObjLabel = New-Object System.Windows.Forms.Label

@@ -24,6 +24,8 @@ function showTree($description) {
     $window.FormBorderStyle = 'FixedDialog'
     $window.StartPosition = "CenterScreen"
     $window.Text = "Auswahl treffen"
+    $window.MaximizeBox = $false
+    $window.MinimizeBox = $false
 
     $treeView = New-Object System.Windows.Forms.TreeView
     $treeView.Dock = 'Fill'
@@ -69,12 +71,23 @@ function showTree($description) {
 
     $ButtonOK = New-Object System.Windows.Forms.Button
     $ButtonOK.DialogResult = 'OK'
-    $ButtonOK.Location = [System.Drawing.Point]::new(445, 767)
+    $ButtonOK.Location = [System.Drawing.Point]::new(445-80, 767)
     $ButtonOK.Size = [System.Drawing.Size]::new(75, 23)
     $ButtonOK.Name = 'ButtonOK'
     $ButtonOK.Text = 'OK'
     $ButtonOK.add_Click($ButtonOK_Click)
+
+    $ButtonCancel = New-Object System.Windows.Forms.Button
+    $ButtonCancel.DialogResult = 'Cancel'
+    $ButtonCancel.Location = [System.Drawing.Point]::new(445, 767)
+    $ButtonOK.Size = [System.Drawing.Size]::new(75, 23)
+    $ButtonCancel.Name = 'ButtonCancel'
+    $ButtonCancel.Text = 'Abbrechen'
+
+    $window.AcceptButton = $ButtonOK
+    $window.CancelButton = $ButtonCancel
     $window.Controls.Add($ButtonOK)
+    $window.Controls.Add($ButtonCancel)
 
     $window.Controls.Add($treeView)
     $window.ShowDialog()

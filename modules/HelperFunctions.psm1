@@ -56,7 +56,7 @@ Function yesNoBox($title, $message, $default = 'Yes', $icon = 'Question') {
 
 Function exitError($message) {
     if ($message) {
-        [System.Windows.MessageBox]::Show($message, 'Fehlgeschlagen', 'OK', 'Stop')
+        [System.Windows.MessageBox]::Show($message, 'Fehlgeschlagen', 'OK', 'Stop') | Out-Null
     }
     exit -1
 }
