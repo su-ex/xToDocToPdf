@@ -105,7 +105,7 @@ Function getDescription($path) {
 Function setDescription($path, $description) {
     $description | ForEach-Object {
         replaceTokens $insertionPlaceholder @{
-            disabled = IIf $_.enabled "" ";"
+            disabled = $_.enabled ? "" : ";"
             indent = "`t" * $_.indent
             desc = $_.desc
             rawflags = $_.rawFlags
