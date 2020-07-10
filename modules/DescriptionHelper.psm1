@@ -13,7 +13,7 @@ Function getDescription($path) {
     $i = 1
     $lastIndent = 0
     foreach($line in [System.IO.File]::ReadAllLines($path)) {
-        if ($line -match '^\s*$' -or $line[0] -eq "#") {
+        if ($line -match '^\s*(#.*)?$') {
             $i += 1
             continue
         }
