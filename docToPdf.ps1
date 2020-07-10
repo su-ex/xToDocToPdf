@@ -5,7 +5,6 @@
     [String] ${target-pdf-file}
 )
 
-Import-Module "$PSScriptRoot\modules\WordAbstraction.psm1" -Force
 Import-Module "$PSScriptRoot\modules\ProgressHelper.psm1" -Force
 Import-Module "$PSScriptRoot\modules\PdfHelper.psm1" -Force
 Import-Module "$PSScriptRoot\modules\WordPdfExportHelper.psm1" -Force

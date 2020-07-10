@@ -6,6 +6,8 @@ $wdFindStop = 0
 $wdReplaceNone = 0
 $wdActiveEndPageNumber = 3
 
+$wdNumberOfPagesInDocument = 4
+
 $wdExportFormatPDF = 17
 $wdExportOptimizeForPrint = 0
 $wdExportAllDocument = 0
@@ -64,6 +66,10 @@ class WordPdfExportHelper {
         }
 
         return $pdfReplacements
+    }
+
+    [int] getTotalPageCount() {
+        return $this.doc.Content.Information($Script:wdNumberOfPagesInDocument)
     }
 
     [void] hidePlaceholders() {
