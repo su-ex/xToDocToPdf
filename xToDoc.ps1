@@ -231,7 +231,7 @@ try {
                     throw "$($p.path) ist kein Verzeichnis!"
                 }
                 
-                $gottenFiles = (getDescribedFolder -Path $p.path -Recurse:($p.flags.ContainsKey("alphabeticalRecursion")) -Extensions $allExtensions -Indent ($p.indent + (IIf $p.flags.ContainsKey("alphabeticalKeepIndent") 0 1)))
+                $gottenFiles = (getDescribedFolder -Path $p.path -Recurse:($p.flags.ContainsKey("alphabeticalRecursion")) -Extensions $allExtensions -Indent ($p.indent + ($p.flags.ContainsKey("alphabeticalKeepIndent") ? 0 : 1)))
                 foreach ($s in $gottenFiles) {
                     $pieces.Enqueue($s) | Out-Null
                 }
