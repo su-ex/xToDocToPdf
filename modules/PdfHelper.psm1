@@ -15,7 +15,7 @@ Function getPdfPageDimensions($file) {
         throw "Calling qpdf failed:`n$output"
     }
 
-    $pdfjson = $output | ConvertFrom-Json
+    $pdfjson = $output | ConvertFrom-Json -AsHashtable
 
     $pages = [System.Collections.ArrayList]@()
 
