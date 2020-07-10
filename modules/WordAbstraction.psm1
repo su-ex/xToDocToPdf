@@ -43,7 +43,7 @@
     }
 
     [boolean] replaceVariable($path, $name, $value, $replaceAll, $startEnd) {
-        $length = 255
+        $length = 254
         if ($value.Length -gt $length) {
             $variableCount = [Math]::Ceiling($value.Length/$length)
             $restStringLength = $value.Length % $length
@@ -57,10 +57,21 @@
                 throw "Der Variableninhalt von `$$name ist viel zu lang oder der Variablenname selbst ist viel zu lang!"
             }
 
+            $oldOffset = 0
             for  ($i = 0; $i -lt $variableCount-1; $i++) {
-                if (-not $this.replaceVariable($path, "$($name)_$($i)", $value.Substring($i * $length, $length), $replaceAll, $startEnd)) { return $false }
+                $carets = 0
+                for ($l = (($i+1)*$length)-1; $l -ge $i*$length+$oldOffset; $l--) {
+                    if ($value[$l] -ne '^') { break }
+                    $carets += 1
+                }
+
+                $offset = $carets % 2
+
+                if (-not $this.replaceVariable($path, "$($name)_$($i)", $value.Substring($i * $length + $oldOffset, $length + ($offset - $oldOffset)), $replaceAll, $startEnd)) { return $false }
+
+                $oldOffset = $offset
             }
-            if (-not $this.replaceVariable($path, "$($name)_$($variableCount-1)", $value.Substring(($variableCount-1) * $length, $restStringLength), $replaceAll, $startEnd)) { return $false }
+            if (-not $this.replaceVariable($path, "$($name)_$($variableCount-1)", $value.Substring(($variableCount-1) * $length + $oldOffset, $restStringLength - $oldOffset), $replaceAll, $startEnd)) { return $false }
 
             return $true
         }
