@@ -5,7 +5,7 @@ The main purpose is Word documents and PDF documents being concatenated to a sin
 
 Additionally xToDoc has a few neat features like replacing variables inside Word documents. Details are explained below.
 
-IMAGE
+![Übersicht](https://user-images.githubusercontent.com/9221456/90759422-ad85cc00-e2e0-11ea-821f-61f7890de7cf.png)
 
 ## How to "install"
 You'll need PowerShell Core Version 7 or up installed. You can get it [here](https://github.com/powershell/powershell#get-powershell).
@@ -155,7 +155,7 @@ Variables may contain formatting tags like explained above for bold, underline a
 `docToPdf` does these main steps by
 the following sequence:
 
- 1. Identify the pdf placeholder pages in the source word file and extract there information (the paths must be absolute, see assets/PDF.docx for an example template page)
+ 1. Identify the pdf placeholder pages in the source word file and extract their information (the paths must be absolute, see assets/PDF.docx for an example template page)
  2. Determine the orientation of the word document
  3. Hide the placeholders and export the Word document as PDF document
  4. Extract the orientation of each page in each PDF document and rotate pages in the exported PDF document whose orientation doesn't match
