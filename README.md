@@ -112,6 +112,8 @@ A normal line should look like this (every placeholder like this `⟨..⟩` need
 - Flags can alter the handling of the line and are described in detail in the table below.
 - The path needs to be to a word or pdf document or to a folder.
 
+All paths in a description file are relative to the **template** description file (this means relative paths in the selected description file are still relative to the template description file) if custom base path flag `c` is not set for a line (see below)!
+
 #### Flags
 
 flag&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | meaning
