@@ -1,5 +1,5 @@
 ﻿Param (
-    [String] ${working-directory},
+    [String] ${working-directory} = ".",
     
     [String] ${target-file} = ".\target.docx",
     [String] ${selected-description-file} = ".\target.desc",
@@ -36,18 +36,14 @@ $pdfExtensions = @(".pdf")
 
 $allExtensions = ($wordExtensions + $pdfExtensions)
 
-# enforce working-directory and template-description-file to be passed as parameter
-if (-not $PSBoundParameters.ContainsKey('working-directory')) {
-    exitError "Ein Arbeitsverzeichnis muss als Parameter übergeben werden!"
-}
+# enforce template-description-file to be passed as parameter
 if (-not $PSBoundParameters.ContainsKey('template-description-file')) {
     exitError "Eine Vorlagenbeschreibungsdatei muss als Parameter übergeben werden!"
 }
 
 # make sure working directory exists and make path always absolute
-try {
-    $Script:workingDirectory = Resolve-Path ${working-directory} -ErrorAction Stop
-} catch {
+$workingDirectory = makePathAbsolute (Get-Location).Path ${working-directory}
+if (-not (Test-Path $workingDirectory)) {
     exitError "Das Arbeitsverzeichnis existiert nicht: $_"
 }
 

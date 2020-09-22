@@ -1,5 +1,5 @@
 Param (
-    [String] ${working-directory},
+    [String] ${working-directory} = ".",
     
     [String] ${source-word-file} = ".\target.docx"
 )
@@ -7,15 +7,9 @@ Param (
 Import-Module "$PSScriptRoot\modules\WordPdfExportHelper.psm1" -Force
 Import-Module "$PSScriptRoot\modules\HelperFunctions.psm1" -Force
 
-# enforce working-directory to be passed as parameter
-if (-not $PSBoundParameters.ContainsKey('working-directory')) {
-    exitError "Ein Arbeitsverzeichnis muss als Parameter übergeben werden!"
-}
-
 # make sure working directory exists and make path always absolute
-try {
-    $Script:workingDirectory = Resolve-Path ${working-directory} -ErrorAction Stop
-} catch {
+$workingDirectory = makePathAbsolute (Get-Location).Path ${working-directory}
+if (-not (Test-Path $workingDirectory)) {
     exitError "Das Arbeitsverzeichnis existiert nicht: $_"
 }
 

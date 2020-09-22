@@ -31,7 +31,7 @@ Of course adjust path and name according to this repo's path on your filesystem 
 
 ### SYNOPSIS
 
-**xToDoc** **-working-directory** _path_ \[**-target-file** _path_] \[**-selected-description-file** _path_] **-template-description-file** _path_ \[**-lang** _language\_identifier_] [**-get-variables-from-excel** **-excel-variables-workbook-file** _path_ **-excel-variables-worksheet-name** _worksheet\_name_ **-excel-variables-table-name** _table\_name_] [**-get-translations-from-excel** **-excel-translations-workbook-file** _path_ **-excel-translations-worksheet-name** _worksheet\_name_ **-excel-translations-table-name** _table\_name_] \[**-custom-template-pdf-page** _path_] \[**-custom-base-path** **,**_path_ ...]
+**xToDoc** \[**-working-directory** _path_] \[**-target-file** _path_] \[**-selected-description-file** _path_] **-template-description-file** _path_ \[**-lang** _language\_identifier_] [**-get-variables-from-excel** **-excel-variables-workbook-file** _path_ **-excel-variables-worksheet-name** _worksheet\_name_ **-excel-variables-table-name** _table\_name_] [**-get-translations-from-excel** **-excel-translations-workbook-file** _path_ **-excel-translations-worksheet-name** _worksheet\_name_ **-excel-translations-table-name** _table\_name_] \[**-custom-template-pdf-page** _path_] \[**-custom-base-path** **,**_path_ ...]
 
 ### DESCRIPTION
 
@@ -53,7 +53,7 @@ the following sequence:
 #### Options
 
 `-working-directory`  
-:   Sets a directory to which paths of other options will be relative to if there hasn't been given an absolute path.
+:   Sets a directory to which paths of other options will be relative to if there hasn't been given an absolute path. Defaults to current directory.
 
 `-target-file`  
 :   Specifies the target Word document's path and filename.
@@ -150,7 +150,7 @@ Variables may contain formatting tags like explained above for bold, underline a
 
 ### SYNOPSIS
 
-**docToPdf** **-working-directory** _path_ \[**-source-word-file** _path_] \[**-target-pdf-file** _path_] 
+**docToPdf** \[**-working-directory** _path_] \[**-source-word-file** _path_] \[**-target-pdf-file** _path_] 
 
 ### DESCRIPTION
 
@@ -166,7 +166,7 @@ the following sequence:
 #### Options
 
 `-working-directory`  
-:   Sets a directory to which paths of other options will be relative to if there hasn't been given an absolute path.
+:   Sets a directory to which paths of other options will be relative to if there hasn't been given an absolute path. Defaults to current directory.
 
 `-source-word-file`  
 :   Specifies the source Word document's path. This should probably have the same value like the xToDoc `-target-file` option.
