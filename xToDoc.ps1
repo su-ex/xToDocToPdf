@@ -8,6 +8,8 @@
 
     [String] ${template-description-file},
 
+    [Switch] ${skip-tree-selection},
+
     [String] $lang,
     
     [Switch] ${get-variables-from-excel},
@@ -44,6 +46,10 @@ if (-not $PSBoundParameters.ContainsKey('template-description-file')) {
 }
 
 $saveSelectedDescription = -not ${skip-saving-selected-description}.IsPresent
+$showTreeSelection = -not ${skip-tree-selection}.IsPresent
+if (-not $showTreeSelection) {
+    $saveSelectedDescription = $false
+}
 
 # make sure working directory exists and make path always absolute
 $workingDirectory = makePathAbsolute (Get-Location).Path ${working-directory}
@@ -145,9 +151,11 @@ try {
 Write-Debug "Description before tree selection:"
 $description | Select-Object -Property * -ExcludeProperty rawflags,asset | Format-Table | Out-String | Write-Debug
 
-$continue = showTree $description
-if ($continue -ne $true) {
-    exitError "Abgebrochen"
+if ($showTreeSelection) {
+    $continue = showTree $description
+    if ($continue -ne $true) {
+        exitError "Abgebrochen"
+    }
 }
 
 Write-Debug "Description after tree selection:"
