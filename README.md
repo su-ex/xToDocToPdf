@@ -59,7 +59,7 @@ the following sequence:
 :   Specifies the target Word document's path and filename.
 
 `-skip-saving-selected-description`
-:   Skip saving selected description.
+:   Skip saving selected description to a file. This makes `-selected-description-file` futile.
 
 `-selected-description-file`  
 :   Specifies the path and filename of the description file where the selection in the tree dialog is stored.
@@ -68,7 +68,7 @@ the following sequence:
 :   Specifies the path and filename of the description file which is read in if there was no tree selection yet or if it should explicitly be used instead of the already existing selection.
 
 `-skip-tree-selection`
-:   Skip tree selection. This implicitly enables `-skip-saving-selected-description`.
+:   Skip showing tree selection dialogue. This implicitly enables `-skip-saving-selected-description`.
 
 `-lang`  
 :   Specifiy a language identifier. Template documents will be taken from a subfolder with this language identifier as folder name if not left empty.
