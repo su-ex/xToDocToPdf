@@ -2,6 +2,8 @@
     [String] ${working-directory} = ".",
     
     [String] ${target-file} = ".\target.docx",
+
+    [Switch] ${skip-saving-selected-description},
     [String] ${selected-description-file} = ".\target.desc",
 
     [String] ${template-description-file},
@@ -40,6 +42,8 @@ $allExtensions = ($wordExtensions + $pdfExtensions)
 if (-not $PSBoundParameters.ContainsKey('template-description-file')) {
     exitError "Eine Vorlagenbeschreibungsdatei muss als Parameter übergeben werden!"
 }
+
+$saveSelectedDescription = -not ${skip-saving-selected-description}.IsPresent
 
 # make sure working directory exists and make path always absolute
 $workingDirectory = makePathAbsolute (Get-Location).Path ${working-directory}
@@ -121,12 +125,14 @@ try {
 
 # ask if existing selected description should be used or check if selected description's base path exists
 $descriptionFile = $templateDescriptionFile
-if (Test-Path $selectedDescriptionFile) {
-    if ((yesNoBox 'Auswahl bereits getroffen' "Soll die bereits getroffene Auswahl verwendet werden?`nWenn nicht, wird sie überschrieben.") -eq 'Yes') {
-        $descriptionFile = $selectedDescriptionFile
+if ($saveSelectedDescription) {
+    if (Test-Path $selectedDescriptionFile) {
+        if ((yesNoBox 'Auswahl bereits getroffen' "Soll die bereits getroffene Auswahl verwendet werden?`nWenn nicht, wird sie überschrieben.") -eq 'Yes') {
+            $descriptionFile = $selectedDescriptionFile
+        }
+    } elseif (-not (Split-Path $selectedDescriptionFile | Test-Path)) {
+        exitError "Das Verzeichnis, in dem die Datei mit der getroffenen Auswahl gespeichert werden soll, existiert nicht!"
     }
-} elseif (-not (Split-Path $selectedDescriptionFile | Test-Path)) {
-    exitError "Das Verzeichnis, in dem die Datei mit der getroffenen Auswahl gespeichert werden soll, existiert nicht!"
 }
 
 # extract description from file
@@ -148,7 +154,9 @@ Write-Debug "Description after tree selection:"
 $description | Select-Object -Property * -ExcludeProperty rawflags,asset | Format-Table | Out-String | Write-Debug
 
 # write selected elements of description to file
-setDescription $selectedDescriptionFile $description
+if ($saveSelectedDescription) {
+    setDescription $selectedDescriptionFile $description
+}
 
 $description = ($description | Where-Object { $_.enabled })
 $totalOperations = 5

@@ -31,7 +31,7 @@ Of course adjust path and name according to this repo's path on your filesystem 
 
 ### SYNOPSIS
 
-**xToDoc** \[**-working-directory** _path_] \[**-target-file** _path_] \[**-selected-description-file** _path_] **-template-description-file** _path_ \[**-lang** _language\_identifier_] [**-get-variables-from-excel** **-excel-variables-workbook-file** _path_ **-excel-variables-worksheet-name** _worksheet\_name_ **-excel-variables-table-name** _table\_name_] [**-get-translations-from-excel** **-excel-translations-workbook-file** _path_ **-excel-translations-worksheet-name** _worksheet\_name_ **-excel-translations-table-name** _table\_name_] \[**-custom-template-pdf-page** _path_] \[**-custom-base-path** **,**_path_ ...]
+**xToDoc** \[**-working-directory** _path_] \[**-target-file** _path_] \[**-skip-saving-selected-description**] \[**-selected-description-file** _path_] **-template-description-file** _path_ \[**-lang** _language\_identifier_] [**-get-variables-from-excel** **-excel-variables-workbook-file** _path_ **-excel-variables-worksheet-name** _worksheet\_name_ **-excel-variables-table-name** _table\_name_] [**-get-translations-from-excel** **-excel-translations-workbook-file** _path_ **-excel-translations-worksheet-name** _worksheet\_name_ **-excel-translations-table-name** _table\_name_] \[**-custom-template-pdf-page** _path_] \[**-custom-base-path** **,**_path_ ...]
 
 ### DESCRIPTION
 
@@ -57,6 +57,9 @@ the following sequence:
 
 `-target-file`  
 :   Specifies the target Word document's path and filename.
+
+`-skip-saving-selected-description`
+:   Skip saving selected description.
 
 `-selected-description-file`  
 :   Specifies the path and filename of the description file where the selection in the tree dialog is stored.
