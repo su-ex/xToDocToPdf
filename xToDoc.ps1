@@ -4,7 +4,7 @@
     [String] ${target-file} = ".\target.docx",
 
     [Switch] ${skip-saving-selected-description},
-    [String] ${selected-description-file} = ".\target.desc",
+    [String] ${selected-description-file},
 
     [String] ${template-description-file},
 
@@ -57,10 +57,6 @@ if (-not (Test-Path $workingDirectory)) {
     exitError "Das Arbeitsverzeichnis existiert nicht: $_"
 }
 
-# base relative paths upon working directory
-$targetFile = makePathAbsolute $workingDirectory ${target-file}
-$selectedDescriptionFile = makePathAbsolute $workingDirectory ${selected-description-file}
-
 # get replacement variables from Excel table
 $replaceVariables = ${get-variables-from-excel}.IsPresent
 if ($replaceVariables) {
@@ -109,6 +105,8 @@ if ($PSBoundParameters.ContainsKey('custom-template-pdf-page')) {
 }
 
 # ask if existing target document should be deleted or check if its base path exists
+$targetFile = makePathAbsolute $workingDirectory ${target-file}
+
 try {
     if (Test-Path $targetFile) {
         if ((yesNoBox 'Zieldokument existiert bereits' "Soll $targetFile überschrieben werden?" 'No' 'Warning') -eq 'No') {
@@ -120,6 +118,16 @@ try {
     }
 } catch {
     exitError $_.Exception.Message
+}
+
+# base selected description file name and path upon target file if not explicitely passed
+$selectedDescriptionFile = makePathAbsolute $workingDirectory ([System.IO.Path]::ChangeExtension(${target-file}, "desc"))
+if ($PSBoundParameters.ContainsKey('selected-description-file')) {
+    $selectedDescriptionFile = makePathAbsolute $workingDirectory ${selected-description-file}
+
+    if (-not (Split-Path $selectedDescriptionFile | Test-Path)) {
+        exitError "Das Verzeichnis, in dem die ausgewählte Beschreibungsdatei gespeichert werden soll, existiert nicht!"
+    }
 }
 
 # check if template description file exists and make path always absolute

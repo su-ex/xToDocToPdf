@@ -62,7 +62,7 @@ the following sequence:
 :   Skip saving selected description to a file. This makes `-selected-description-file` futile.
 
 `-selected-description-file`  
-:   Specifies the path and filename of the description file where the selection in the tree dialog is stored.
+:   Specifies the path and filename of the description file where the selection in the tree dialog is stored. If omitted, the target Word document's file extension will be swapped to the desc file extension.
 
 `-template-description-file`  
 :   Specifies the path and filename of the description file which is read in if there was no tree selection yet or if it should explicitly be used instead of the already existing selection.
