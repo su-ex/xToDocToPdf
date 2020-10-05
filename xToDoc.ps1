@@ -11,6 +11,8 @@
     [Switch] ${skip-tree-selection},
 
     [String] $lang,
+
+    [String[][]] $variables,
     
     [Switch] ${get-variables-from-excel},
     [String] ${excel-variables-workbook-file},
@@ -58,8 +60,7 @@ if (-not (Test-Path $workingDirectory)) {
 }
 
 # get replacement variables from Excel table
-$replaceVariables = ${get-variables-from-excel}.IsPresent
-if ($replaceVariables) {
+if (${get-variables-from-excel}.IsPresent) {
     # base relative paths upon working directory
     $excelWorkbookFile = makePathAbsolute $workingDirectory ${excel-variables-workbook-file}
     
@@ -68,7 +69,7 @@ if ($replaceVariables) {
     }
         
     try {
-        $Script:replacementVariables = [string[][]](Get-ExcelTable $excelWorkbookFile ${excel-variables-table-name} ${excel-variables-worksheet-name} | ForEach-Object {@(, ($_.PSObject.Properties | ForEach-Object {$_.Value}))})
+        $variables += [string[][]](Get-ExcelTable $excelWorkbookFile ${excel-variables-table-name} ${excel-variables-worksheet-name} | ForEach-Object {@(, ($_.PSObject.Properties | ForEach-Object {$_.Value}))})
     } catch {
         exitError "Beim Auslesen der Tabelle mit den Variablen ist ein Fehler aufgetreten: $($_.Exception.Message)`nStimmen der Arbeitsmappen-, Arbeitsblatt- und Tabellenname???"
     }
@@ -175,8 +176,7 @@ if ($useSelectedDescriptionFile) {
 }
 
 $description = ($description | Where-Object { $_.enabled })
-$totalOperations = 5
-if ($replaceVariables) { $totalOperations++ }
+$totalOperations = 6
 foreach ($d in $description) { $totalOperations++ }
 
 # custom base paths
@@ -356,18 +356,15 @@ try {
             }
         }
     }
+ 
+    $progress.update("Variablen ersetzen")
+    foreach ($variable in $variables) {
+        [string]$name = $variable[0]
+        [string]$value = $variable[1]
 
-    if ($replaceVariables) { 
-        $progress.update("Variablen ersetzen")
+        if ($name -eq "") { continue }
         
-        foreach ($variable in $replacementVariables) {
-            [string]$name = $variable[0]
-            [string]$value = $variable[1]
-
-            if ($name -eq "") { continue }
-            
-            if (-not $WA.replaceVariable($targetFile, $name, $value)) { $progress.error() }
-        }
+        if (-not $WA.replaceVariable($targetFile, $name, $value)) { $progress.error() }
     }
 
     $progress.update("Aktualisiere Überschriften")

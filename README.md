@@ -31,7 +31,7 @@ Of course adjust path and name according to this repo's path on your filesystem 
 
 ### SYNOPSIS
 
-**xToDoc** \[**-working-directory** _path_] \[**-target-file** _path_] \[**-no-selected-description-file**] \[**-selected-description-file** _path_] **-template-description-file** _path_ \[**-skip-tree-selection**] \[**-lang** _language\_identifier_] [**-get-variables-from-excel** **-excel-variables-workbook-file** _path_ **-excel-variables-worksheet-name** _worksheet\_name_ **-excel-variables-table-name** _table\_name_] [**-get-translations-from-excel** **-excel-translations-workbook-file** _path_ **-excel-translations-worksheet-name** _worksheet\_name_ **-excel-translations-table-name** _table\_name_] \[**-custom-template-pdf-page** _path_] \[**-custom-base-path** **,**_path_ ...]
+**xToDoc** \[**-working-directory** _path_] \[**-target-file** _path_] \[**-no-selected-description-file**] \[**-selected-description-file** _path_] **-template-description-file** _path_ \[**-skip-tree-selection**] \[**-lang** _language\_identifier_] \[**-variables** **,**_variable_ ...] [**-get-variables-from-excel** **-excel-variables-workbook-file** _path_ **-excel-variables-worksheet-name** _worksheet\_name_ **-excel-variables-table-name** _table\_name_] [**-get-translations-from-excel** **-excel-translations-workbook-file** _path_ **-excel-translations-worksheet-name** _worksheet\_name_ **-excel-translations-table-name** _table\_name_] \[**-custom-template-pdf-page** _path_] \[**-custom-base-path** **,**_path_ ...]
 
 ### DESCRIPTION
 
@@ -72,6 +72,9 @@ the following sequence:
 
 `-lang`  
 :   Specifiy a language identifier. Template documents will be taken from a subfolder with this language identifier as folder name if not left empty.
+
+`-variables`  
+:   Pass variables as two dimensional array: (⟨variable_name⟩, ⟨value⟩), (⟨variable_name⟩, ⟨value⟩), ...
 
 `-get-variables-from-excel`  
 :   This switch enables grabbing variables from an Excel table.
@@ -144,13 +147,24 @@ If there's no description through the underscore syntax, the whole filename will
 
 ### Variable replacement in Word files
 
-To use this feature, you'll need an Excel table with two columns and a header line (what you use as headers doesn't matter). Very important is that you assign a name to the table. The left column should contain the variable names, the right column should contain the replacements. This table can be fed into the script via the `-excel-` options.
+To use this feature, you'll need to pass a two-dimensional array via the `-variables` option or an Excel table. Variables passed via `-variables` are applied before those passed via Excel table --> this effectively prefers variables passed via option because they won't exist anymore when applying those from Excel afterwards.
 
 The syntax for variables inside Word is `{{$⟨variable_name⟩}}`.
 
-So if you have a variable like `{{$asupervariable}}` inside a word document and in the Excel table you fed into the script a row with `asupervariable` in the left column and `a super text` in the right column, `{{$asupervariable}}` will be replaced with `a super text` in the target word document.
-
 Variables may contain formatting tags like explained above for bold, underline and italic and any special characters word understands in its replace dialogue starting with those carets `^` like `^p` for a paragraph break.
+
+#### Passing via `-variables` option
+
+Variables may be passed as two dimensional array this way: (⟨variable_name⟩, ⟨value⟩), (⟨variable_name⟩, ⟨value⟩), ...  
+**It's very important that the name-value pair of each variable is embraced by round brackets ()! The pairs must be seperated by commas.**
+
+So if you have a variable like `{{$asupervariable}}` inside a word document and you call this script with `-variables ("asupervariable", "a super text")`, `{{$asupervariable}}` will be replaced with `a super text` in the target word document.
+
+#### Passing via Excel table
+
+The Excel table should have two columns and a header line (what you use as headers doesn't matter). Very important is that you assign a name to the table. The left column should contain the variable names, the right column should contain the replacements. This table can be fed into the script via the `-excel-` options.
+
+So if you have a variable like `{{$anothersupervariable}}` inside a word document and in the Excel table you fed into the script a row with `anothersupervariable` in the left column and `another super text` in the right column, `{{$anothersupervariable}}` will be replaced with `another super text` in the target word document.
 
 ## docToPdf
 
