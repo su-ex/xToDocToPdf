@@ -31,7 +31,7 @@ Of course adjust path and name according to this repo's path on your filesystem 
 
 ### SYNOPSIS
 
-**xToDoc** \[**-working-directory** _path_] \[**-target-file** _path_] \[**-skip-saving-selected-description**] \[**-selected-description-file** _path_] **-template-description-file** _path_ \[**-skip-tree-selection**] \[**-lang** _language\_identifier_] [**-get-variables-from-excel** **-excel-variables-workbook-file** _path_ **-excel-variables-worksheet-name** _worksheet\_name_ **-excel-variables-table-name** _table\_name_] [**-get-translations-from-excel** **-excel-translations-workbook-file** _path_ **-excel-translations-worksheet-name** _worksheet\_name_ **-excel-translations-table-name** _table\_name_] \[**-custom-template-pdf-page** _path_] \[**-custom-base-path** **,**_path_ ...]
+**xToDoc** \[**-working-directory** _path_] \[**-target-file** _path_] \[**-no-selected-description-file**] \[**-selected-description-file** _path_] **-template-description-file** _path_ \[**-skip-tree-selection**] \[**-lang** _language\_identifier_] [**-get-variables-from-excel** **-excel-variables-workbook-file** _path_ **-excel-variables-worksheet-name** _worksheet\_name_ **-excel-variables-table-name** _table\_name_] [**-get-translations-from-excel** **-excel-translations-workbook-file** _path_ **-excel-translations-worksheet-name** _worksheet\_name_ **-excel-translations-table-name** _table\_name_] \[**-custom-template-pdf-page** _path_] \[**-custom-base-path** **,**_path_ ...]
 
 ### DESCRIPTION
 
@@ -58,8 +58,8 @@ the following sequence:
 `-target-file`  
 :   Specifies the target Word document's path and filename.
 
-`-skip-saving-selected-description`
-:   Skip saving selected description to a file. This makes `-selected-description-file` futile.
+`-no-selected-description-file`
+:   This skips saving selected description to a file and doesn't use an existing one. This makes `-selected-description-file` futile.
 
 `-selected-description-file`  
 :   Specifies the path and filename of the description file where the selection in the tree dialog is stored. If omitted, the target Word document's file extension will be swapped to the desc file extension.
@@ -68,7 +68,7 @@ the following sequence:
 :   Specifies the path and filename of the description file which is read in if there was no tree selection yet or if it should explicitly be used instead of the already existing selection.
 
 `-skip-tree-selection`
-:   Skip showing tree selection dialogue. This implicitly enables `-skip-saving-selected-description`.
+:   Skip showing tree selection dialogue. This implicitly enables `-no-selected-description-file`.
 
 `-lang`  
 :   Specifiy a language identifier. Template documents will be taken from a subfolder with this language identifier as folder name if not left empty.

@@ -3,7 +3,7 @@
     
     [String] ${target-file} = ".\target.docx",
 
-    [Switch] ${skip-saving-selected-description},
+    [Switch] ${no-selected-description-file},
     [String] ${selected-description-file},
 
     [String] ${template-description-file},
@@ -45,10 +45,10 @@ if (-not $PSBoundParameters.ContainsKey('template-description-file')) {
     exitError "Eine Vorlagenbeschreibungsdatei muss als Parameter übergeben werden!"
 }
 
-$saveSelectedDescription = -not ${skip-saving-selected-description}.IsPresent
+$useSelectedDescriptionFile = -not ${no-selected-description-file}.IsPresent
 $showTreeSelection = -not ${skip-tree-selection}.IsPresent
 if (-not $showTreeSelection) {
-    $saveSelectedDescription = $false
+    $useSelectedDescriptionFile = $false
 }
 
 # make sure working directory exists and make path always absolute
@@ -139,7 +139,7 @@ try {
 
 # ask if existing selected description should be used or check if selected description's base path exists
 $descriptionFile = $templateDescriptionFile
-if ($saveSelectedDescription) {
+if ($useSelectedDescriptionFile) {
     if (Test-Path $selectedDescriptionFile) {
         if ((yesNoBox 'Auswahl bereits getroffen' "Soll die bereits getroffene Auswahl verwendet werden?`nWenn nicht, wird sie überschrieben.") -eq 'Yes') {
             $descriptionFile = $selectedDescriptionFile
@@ -170,7 +170,7 @@ Write-Debug "Description after tree selection:"
 $description | Select-Object -Property * -ExcludeProperty rawflags,asset | Format-Table | Out-String | Write-Debug
 
 # write selected elements of description to file
-if ($saveSelectedDescription) {
+if ($useSelectedDescriptionFile) {
     setDescription $selectedDescriptionFile $description
 }
 
