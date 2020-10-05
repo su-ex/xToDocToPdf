@@ -32,6 +32,11 @@ if ($PSBoundParameters.ContainsKey('target-pdf-file')) {
     }
 }
 
+# check if target pdf file is writeable
+if (Test-FileLock $targetPdfFile) {
+    exitError "Die Ziel-PDF-Datei ist anderswo geöffnet, bitte schließen!"
+}
+
 $wpeh = WordPdfExportHelper $sourceWordFile
 
 $progress = ProgressHelper "Exportiere Word-Dokument als PDF ..."
